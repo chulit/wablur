@@ -1,0 +1,76 @@
+<!doctype html>
+<!-- Synthetic WhatsApp Web structure for selector tests (EN).
+     Fully fictional: no real names, numbers, or message content.
+     Carries both the current and the previous WhatsApp generation's
+     structure, mirroring the catalogue's fallback layers. -->
+<html lang="en">
+  <head><title>WhatsApp Web (fixture)</title></head>
+  <body>
+    <div id="app">
+      <div id="pane-side">
+        <header>
+          <div aria-label="profile photo"><img src="own-avatar.png" alt="" /></div>
+          <span>Sample Self</span>
+        </header>
+        <div aria-label="Chat list">
+          <div role="listitem">
+            <div class="_ak8h"><img src="avatar-a.png" alt="" /></div>
+            <span dir="auto" title="Contact A" class="_ak8q">Contact A</span>
+            <div class="_ak8k">Sample preview text</div>
+          </div>
+          <div role="listitem">
+            <div class="_ak8h"><img src="avatar-b.png" alt="" /></div>
+            <span dir="auto" title="Group B" class="_ak8q">Group B</span>
+            <span class="vQ0w7">Former-generation preview text</span>
+          </div>
+          <!-- Previous generation row shape (rows were role="row"). -->
+          <div role="row">
+            <div class="_1AHcd"><img class="_13jwn" src="avatar-c.png" alt="" /></div>
+            <span class="_ak8q">Former Contact</span>
+          </div>
+          <!-- Current generation (stylex era, probed live 2026-10-20):
+               row > gridcell(avatar) + gridcell(name span[title][dir=auto],
+               preview span[title] without dir). Class names omitted —
+               the catalogue anchors on roles/attributes, not classes. -->
+          <div role="row">
+            <div role="gridcell"><div><img src="avatar-d.png" alt="" /></div></div>
+            <div>
+              <div role="gridcell">
+                <span dir="auto" title="Contact D">Contact D</span>
+                <span title="Sample preview D full text">Sample preview D</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="main">
+        <header>
+          <img src="avatar-a.png" alt="" />
+          <span dir="auto" title="Contact A">Contact A</span>
+        </header>
+        <!-- Pinned-message bar (probed live 2026-10-21): a span that
+             is the header's direct next sibling inside #main. -->
+        <span>Sample pinned message</span>
+        <div class="focusable-list-item">
+          <div class="_amk4"><div class="_amk6">Sample message one</div></div>
+        </div>
+        <div class="focusable-list-item">
+          <div class="_amk4">
+            <div class="_amk6">Sample message with media</div>
+            <img src="sample-media.png" alt="" />
+            <video src="sample-media.mp4"></video>
+            <div class="_am2s">Sample sticker</div>
+          </div>
+        </div>
+        <!-- Previous generation message structure. -->
+        <div class="_2AOIt"><div>Former sample message</div></div>
+        <!-- Media gallery thumbnails. -->
+        <div class="_ajuf _ajuh _ajug"><div>Sample thumbnail</div></div>
+        <footer><div contenteditable="true">Type a message</div></footer>
+      </div>
+      <div role="dialog">
+        <div class="copyable-text">Sample contact info</div>
+      </div>
+    </div>
+  </body>
+</html>

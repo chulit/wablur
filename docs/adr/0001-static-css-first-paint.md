@@ -1,0 +1,5 @@
+# Static CSS for the default state, generated from the catalogue
+
+WhatsApp Web can flash unblurred content on load if blur depends on JavaScript, because content-script JS runs at `document_idle` while manifest-declared CSS is injected before any DOM is displayed (see `research.md` §1.1, §3). We therefore ship a static CSS file covering the default Settings (all Blur Targets on), generated at build time from the same selector catalogue the runtime uses via `compileCss(DEFAULT_SETTINGS)` — one catalogue, two uses — and the runtime applies the user's actual Settings on top. Any first-paint flash is in the safe direction (over-blur), never a leak.
+
+**Implementation note (ticket 01 code review, 2026-10-20):** the generated static rules are scoped to `:root:not(.wa-blur-live)`, and the runtime's style sink adds the `wa-blur-live` class to `<html>` on its first apply. The static sheet therefore disables itself at the moment the runtime takes over, instead of fighting the runtime's CSS on cascade order — an "everything off" Settings state compiles to empty CSS and would have had nothing to override a same-specificity `!important` static rule with.

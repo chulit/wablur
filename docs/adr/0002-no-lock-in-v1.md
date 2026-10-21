@@ -1,0 +1,3 @@
+# No Lock in v1; a Lock is a separate module if it ever ships
+
+The v1 promise is Visual Privacy against Screen Share and Shoulder Surfing (grill Q3, D1) — exposures a PIN gate does not improve, since the user is present and the screen is shared deliberately. A Lock also cannot be expressed in the pure, CSS-only `BlurEngine`; folding idle/PIN state into it would destroy the purity its depth and testability depend on (codebase-design comparison). We therefore ship v1 without a Lock, and if a Lock is ever built it will be a separate deep module with its own interface, consuming Settings like any other caller.

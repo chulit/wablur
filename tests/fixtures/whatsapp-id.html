@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Synthetic WhatsApp Web structure for selector tests (ID).
+     Fully fictional: no real names, numbers, or message content.
+     Mirrors the EN fixture's structure with Indonesian aria-labels,
+     mirroring WhatsApp Web's localised anchors. -->
+<html lang="id">
+  <head><title>WhatsApp Web (fixture)</title></head>
+  <body>
+    <div id="app">
+      <div id="pane-side">
+        <header>
+          <div aria-label="foto profil"><img src="own-avatar.png" alt="" /></div>
+          <span>Contoh Diri</span>
+        </header>
+        <div aria-label="Daftar chat">
+          <div role="listitem">
+            <div class="_ak8h"><img src="avatar-a.png" alt="" /></div>
+            <span dir="auto" title="Kontak A" class="_ak8q">Kontak A</span>
+            <div class="_ak8k">Contoh teks pratinjau</div>
+          </div>
+          <div role="listitem">
+            <div class="_ak8h"><img src="avatar-b.png" alt="" /></div>
+            <span dir="auto" title="Grup B" class="_ak8q">Grup B</span>
+            <span class="vQ0w7">Teks pratinjau generasi lama</span>
+          </div>
+          <!-- Previous generation row shape (rows were role="row"). -->
+          <div role="row">
+            <div class="_1AHcd"><img class="_13jwn" src="avatar-c.png" alt="" /></div>
+            <span class="_ak8q">Kontak Lama</span>
+          </div>
+          <!-- Current generation (stylex era, probed live 2026-10-20). -->
+          <div role="row">
+            <div role="gridcell"><div><img src="avatar-d.png" alt="" /></div></div>
+            <div>
+              <div role="gridcell">
+                <span dir="auto" title="Kontak D">Kontak D</span>
+                <span title="Contoh pratinjau D teks penuh">Contoh pratinjau D</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="main">
+        <header>
+          <img src="avatar-a.png" alt="" />
+          <span dir="auto" title="Kontak A">Kontak A</span>
+        </header>
+        <!-- Pinned-message bar (probed live 2026-10-21). -->
+        <span>Contoh pesan terpin</span>
+        <div class="focusable-list-item">
+          <div class="_amk4"><div class="_amk6">Contoh pesan satu</div></div>
+        </div>
+        <div class="focusable-list-item">
+          <div class="_amk4">
+            <div class="_amk6">Contoh pesan dengan media</div>
+            <img src="sample-media.png" alt="" />
+            <video src="sample-media.mp4"></video>
+            <div class="_am2s">Contoh stiker</div>
+          </div>
+        </div>
+        <!-- Previous generation message structure. -->
+        <div class="_2AOIt"><div>Contoh pesan lama</div></div>
+        <!-- Media gallery thumbnails. -->
+        <div class="_ajuf _ajuh _ajug"><div>Contoh thumbnail</div></div>
+        <footer><div contenteditable="true">Ketik pesan</div></footer>
+      </div>
+      <div role="dialog">
+        <div class="copyable-text">Info kontak contoh</div>
+      </div>
+    </div>
+  </body>
+</html>

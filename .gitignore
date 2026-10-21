@@ -1,0 +1,11 @@
+node_modules/
+dist/
+# Build outputs: regenerate with `npm run build`.
+# (extension/default.css stays committed — a sync test guards it;
+#  extension/icons/*.png stay committed — dimension tests guard them.)
+extension/content.js
+extension/manifest.json
+extension/popup.js
+extension/popup.html
+extension/popup.css
+extension/service-worker.js

@@ -1,0 +1,307 @@
+/* WA Blur popup — styled after the user's 2026-10-21 mockup
+   (design/popup-mockup-2026-10-21.png): soft light-blue canvas,
+   white rounded cards, a single teal accent, pill toggles, local
+   system font stack (no remote fetch). This supersedes the earlier
+   teenage-engineering styling for the popup surface. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 370px;
+  background: #edf3f5;
+  color: #12262e;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(18, 38, 46, 0.04);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: #12262e;
+}
+
+/* Header — eye artwork in a pale-teal tile, name and tagline. */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  background: #dff6f8;
+  border-radius: 14px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.app-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #12262e;
+}
+
+.tagline {
+  font-size: 13px;
+  color: #7a8b96;
+}
+
+/* Master card — Enable Blur. */
+.master-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.master-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.master-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.master-desc {
+  font-size: 12.5px;
+  color: #7a8b96;
+}
+
+/* Pill toggle — teal when on, pale slate when off, white knob. */
+input.toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d8e2e7;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+input.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(18, 38, 46, 0.25);
+  transition: left 0.18s ease;
+}
+
+input.toggle:checked {
+  background: #0bb5c7;
+}
+
+input.toggle:checked::after {
+  left: 23px;
+}
+
+input.toggle:focus-visible,
+input.slider:focus-visible,
+.mode-btn:focus-visible {
+  outline: 2px solid #0899ad;
+  outline-offset: 2px;
+}
+
+/* Blur Mode — segmented pair of buttons. */
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: #f2f7f9;
+  color: #5a6d78;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  background: #dff6f8;
+  color: #0899ad;
+}
+
+.mode-icon {
+  display: inline-flex;
+  flex: none;
+}
+
+/* What to blur — icon, label, toggle; hairline dividers. */
+.targets-card .section-title {
+  margin-bottom: 2px;
+}
+
+.target-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #e7eef1;
+  cursor: pointer;
+}
+
+.target-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.target-icon {
+  flex: none;
+  width: 24px;
+  display: inline-flex;
+  justify-content: center;
+  color: #7a8b96;
+}
+
+.target-icon-text {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.row-label {
+  flex: 1;
+  font-size: 14px;
+  color: #12262e;
+}
+
+/* Blur intensity — teal-filled track, white thumb, value chip. */
+.intensity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+input.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 8px;
+  margin: 0;
+  border-radius: 999px;
+  background: #dce8ec;
+  cursor: pointer;
+}
+
+input.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #0bb5c7;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(18, 38, 46, 0.2);
+}
+
+input.slider::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+input.slider::-moz-range-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: #0bb5c7;
+}
+
+input.slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #0bb5c7;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(18, 38, 46, 0.2);
+}
+
+.intensity-value {
+  flex: none;
+  min-width: 58px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #f2f7f9;
+  text-align: center;
+  font-size: 14px;
+  color: #12262e;
+}
+
+/* Footer — Local-Only note on a pale teal-tinted card. */
+.local-only-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eaf7f8;
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+
+.info-icon {
+  flex: none;
+  display: inline-flex;
+  color: #0899ad;
+}
+
+.local-only-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.local-only-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #0899ad;
+}
+
+.local-only-desc {
+  font-size: 12.5px;
+  color: #7a8b96;
+}

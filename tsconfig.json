@@ -1,0 +1,1 @@
+{"compilerOptions":{"exactOptionalPropertyTypes":true,"forceConsistentCasingInFileNames":true,"lib":["ES2022","DOM","DOM.Iterable"],"module":"ESNext","moduleResolution":"bundler","noUncheckedIndexedAccess":true,"outDir":"dist","skipLibCheck":true,"strict":true,"target":"ES2022","types":["chrome","node"]},"include":["src","tests","scripts","vitest.config.ts"]}
