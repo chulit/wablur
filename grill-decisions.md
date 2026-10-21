@@ -133,6 +133,11 @@ Facts that amend or confirm the design above:
 - **The search surfaces are covered** under the existing Names / Previews / Avatars targets (no new toggle): the search-results grid (`[aria-label="Search results."]`, rows mirror chat-list structure — live-probed 2026-10-21) and the Recent searches group (`[role="group"][aria-label="Recent searches"]`, which lives OUTSIDE #pane-side; each item a button with img + `span[title][dir="auto"]`). Indonesian labels ("Hasil pencarian." / "Pencarian terakhir") are included as unverified fallback candidates. Probing note: the Recent strip unmounts when the search input loses focus, so structure probes for it need a delayed scan while WhatsApp holds focus.
 - **Next coverage frontier, per his sequencing ("di contact info dulu aja")**: the Contact/Group info panel first; the Media/Links/Docs views and the "Media from all chats" gallery are explicitly deferred until he calls them.
 
+### Amendment #14 — 2026-10-21 (user report + taps: "di contact info dulu aja", then "Gas v1.8.1", then "lanjut")
+
+- **The Contact/Group info panel is covered** (v1.8.1), all live-probed 2026-10-21: drawer root `[data-testid="chat-info-drawer"]` (locale-independent, shared by contact and group info) — Names gains its bare `span[dir="auto"]` identity texts (name, phone, about); Avatars gains the profile photo, an SVG (`svg:has(image)` — the only image-bearing svg in the drawer); Media gains `[data-testid="media-canvas-img"]` **globally, without the drawer prefix**: probing showed the Media/Links/Docs view replaces the drawer yet reuses the same thumbnail component, and the all-chats media gallery renders it too (98 tiles probed). Gallery tile captions turned out to be covered already by the legacy Names fallback `div[role="listitem"] span[title]`.
+- Still open on the Media/Links/Docs view: the Docs and Links tabs' text rows (filenames, sender names, link titles) are unprobed.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
