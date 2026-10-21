@@ -143,6 +143,10 @@ Facts that amend or confirm the design above:
 - **The Docs and Links tabs' texts are covered** (v1.8.2), completing the coverage arc that began with his search-surface report. All live-probed 2026-10-21: Docs live in `[data-testid="doc-gallery"]` (Names: bare `span[dir="auto"]`; Previews: the filename caption span `[data-testid="document-caption selectable-text"]` — the testid value contains a space — plus `span[title]`; Media: `[data-testid="document-thumb"]`). Links live in `[data-testid="link-gallery"]` (Names: `span[title][dir="auto"]` sender names; Previews: untitled `span[dir="auto"]` message snippets plus the dedicated `[data-testid="link-preview-title"]` / `[data-testid="link-description"]` spans, unscoped because those components exist only in link galleries; Avatars: gallery `img`; Media: `[data-testid="link-preview-thumbnail-jpeg"]`).
 - Coverage map after v1.8.2: chat list, conversation, search (results + recent), Contact/Group info panel, media gallery (Media tab), Docs tab, Links tab, all-chats media gallery. Known remaining gap: the fullscreen media VIEWER (single-item view) has never been probed.
 
+### Amendment #16 — 2026-10-21 (user live screenshot: "Belum perfect", then "Gas v1.8.3")
+
+- **Links-tab bubble bodies are covered** (v1.8.3). His v1.8.2 live test showed entry headers and preview cards blurred but the message body under each card fully readable (plus the small domain line). Entry-interior probe: link-gallery entries are real message bubbles (msg-container / tail-in / msg-meta) whose body lives in `[data-testid="selectable-text"]` spans and the URL in `[data-testid="url-element"]` — the Messages anchor `.focusable-list-item` does not exist in the gallery, hence the escape. Messages gains both testid selectors scoped to link-gallery; Previews gains `span[dir="ltr"]` inside `link-preview-container` (the domain line); Names gains `[data-testid="author"]` in link-gallery. Lesson recorded: container-level span censuses under-sample — probe the entry interior before mapping a gallery surface.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
