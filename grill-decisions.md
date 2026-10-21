@@ -116,6 +116,10 @@ Facts that amend or confirm the design above:
 
 - **Mosaic is two-layered** (v1.7.2): the v1.7.1 pre-blur coverage chain stays as the base, and the original v1.6.0 raw-sampling chain is merged over it (`feMerge`: base, then crisp). Wherever the crisp samples hit, blocks carry the true colours he preferred; the base shows only in gaps that would otherwise vanish. Both layers are load-bearing (look vs coverage) and commented as such.
 
+### Amendment #10 — 2026-10-21 (user: "Mozaik 1 lapis aja" — supersedes #9)
+
+- **Mosaic is ONE hardened chain** (v1.7.3), chosen by the user over both the bare v1.6.0 recipe and the v1.7.2 two-layer merge. His probe had shown every chat-list row carries the filter — the residual escapes were the sampling lottery INSIDE the filter, not selectors. The single chain: per-cell colour averaging (gaussian, cell/2) → alpha firming (slope 3) → full-cell dilate (`wa-blur-wide`, guarantees every sample dot near content catches colour — any content point lies within cell/√2 of a dot) → sampling → dilate into blocks. Block colour = per-cell average; vanishing is impossible by construction. Each spread step is load-bearing and commented as such.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
