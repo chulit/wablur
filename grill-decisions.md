@@ -124,6 +124,10 @@ Facts that amend or confirm the design above:
 
 - **Mosaic is the original v1.6.0 recipe again** (v1.7.4, byte-identical restore from `f637538`): raw point sampling → dilate. After live-testing every hardening variant, the user chose the original's crisp look with full knowledge of its trade-off, explained and accepted: the recipe only ever sees the graphic at grid points, so very thin/sparse elements can fall between points and escape — that lottery is intrinsic to point sampling (guaranteeing coverage requires spreading/averaging colour first, which is exactly what changed the look in v1.7.1–v1.7.3). Do not re-engineer Mosaic coverage unless he reopens it.
 
+### Amendment #12 — 2026-10-21 (user's tap: "Gas v1.7.5" — supersedes #11)
+
+- **Mosaic is native CSS now**: per-target gaussian blur (radius = cell) seen through a repeating grid mask (tile = cell − gap, gap ≈ 30% of cell, mask-composite intersect). The SVG pixelate machinery (defs element, `PIXELATE_FILTER_ID`, the runtime's cell plumbing) is deleted entirely. Why: an extensive live-debug session (probes v1–v4, a red-flood control, an A/B/C stage bisect) proved DOM coverage was always total and the identical recipe in fresh defs rendered the problem rows perfectly, yet the extension's own `url()`-referenced filter rendered unreliably on specific elements of his live WhatsApp page — while native CSS filters (blur) never failed on any element in any test. The user accepted softer tiles (per-cell blur average behind grid gaps) in exchange for the native path's reliability. If Mosaic ever misbehaves again, the fault is in the mask/blur declarations themselves — do not resurrect the SVG recipe without new evidence.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
