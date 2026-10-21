@@ -112,6 +112,10 @@ Facts that amend or confirm the design above:
 
 - **Mosaic no longer lets thin elements vanish.** The v1.6.0 pixelate recipe sampled the raw graphic at single grid points; elements whose points all missed painted pixels (thin text, plain avatars) rendered nothing at all. The filter now pre-spreads the graphic (gaussian blur at half the cell size) and firms the alpha before sampling, so every cell yields a block. The step is load-bearing and commented as such in `buildPixelateDefs` — do not simplify it away.
 
+### Amendment #9 — 2026-10-21 (user: "lebih bagus yang sebelumnya" — the v1.6.0 look)
+
+- **Mosaic is two-layered** (v1.7.2): the v1.7.1 pre-blur coverage chain stays as the base, and the original v1.6.0 raw-sampling chain is merged over it (`feMerge`: base, then crisp). Wherever the crisp samples hit, blocks carry the true colours he preferred; the base shows only in gaps that would otherwise vanish. Both layers are load-bearing (look vs coverage) and commented as such.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
