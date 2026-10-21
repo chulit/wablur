@@ -95,6 +95,11 @@ Facts that amend or confirm the design above:
 - **`Alt+Shift+S` toggles Mode** (command `toggle-mode`), the parity sibling of `Alt+X` for the master Toggle.
 - **Roadmap approved the same day, in his order**: **v1.5.0 Lock Screen** — a full-screen PIN gate over WhatsApp Web (this activates the reserved term **Lock**, see GLOSSARY; PIN stored as a salted hash, honest deterrent-only framing, no recovery — Local-Only; auto-lock ships as an opt-in setting, default off; triggers: popup button, `Alt+Shift+L`) and **v1.6.0 Blur Type** — `blurStyle` with five values (Default blur, Mosaic, Redact, Frost, Fade), chosen in the popup.
 
+### Amendment #5 — 2026-10-21 (user: "lock screen gitu maksud saya", then "Gas"/"gaskan")
+
+- **The Lock Screen shipped as v1.5.0**, activating the reserved term **Lock** exactly as the glossary always defined it and as ADR-0002 anticipated ("a separate deep module with its own interface"): a pure `engine/lock.ts`, a `LockStore` over its own storage key `wa-blur:lock` (Settings export/reset never carry or clear the PIN), and a Shadow-DOM overlay runtime. ADR-0002's v1 exclusion stands for v1; this amendment supersedes it for later versions at the user's explicit request.
+- Shape: PIN 4–6 digits, salted SHA-256 hash only; triggers = popup button, `Alt+Shift+L` (`lock-now`), and opt-in auto-lock after 1/5/15/30 idle minutes (default off, per his "dengan auto-lock" bundle read together with his queued order). Honest framing everywhere it is described: a deterrent for casual access, not encryption; no PIN recovery (reset via extension data). Permissions remain `storage` only.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.

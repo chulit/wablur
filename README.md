@@ -9,12 +9,13 @@ Visual Privacy for WhatsApp Web. WA Blur is a Chrome extension that blurs your c
 - A global **Toggle**: press `Alt+X` anywhere in Chrome, or use the master switch in the popup.
 - One intensity slider (4–24px, default 8px). Media blurs harder than text by design; you only ever learn one knob.
 - A **Settings page** (gear icon in the popup): Reveal delay, per-target intensity multipliers, and settings export/import/reset — for the knobs you rarely touch.
+- A **Lock Screen**: an optional full-screen PIN gate over WhatsApp Web. Lock it from the popup or with `Alt+Shift+L`, or let it lock itself after inactivity (opt-in: 1/5/15/30 minutes). The PIN is stored only as a salted SHA-256 hash, in its own storage record, separate from your Settings.
 - **Local-Only**: the extension has no backend, makes no network requests, and collects nothing. Your Settings live in your browser's storage (`chrome.storage.sync`); if your browser sync is on, your *browser* may carry them — the extension itself never contacts a server.
 - Minimal by construction: the only permission it asks for is `storage`.
 
 ## What WA Blur is not
 
-WA Blur gives **visual privacy, not security**. Blurring is a rendering effect: the blurred content is still present in the page, and anyone with access to the browser itself (DevTools, copy/paste, a screenshot tool that reads the DOM) can get to it. WA Blur stops eyes — a screen share audience, someone looking over your shoulder — not machines. It has no PIN or password gate, and it is not affiliated with, endorsed by, or sponsored by WhatsApp or Meta.
+WA Blur gives **visual privacy, not security**. Blurring is a rendering effect: the blurred content is still present in the page, and anyone with access to the browser itself (DevTools, copy/paste, a screenshot tool that reads the DOM) can get to it. WA Blur stops eyes — a screen share audience, someone looking over your shoulder — not machines. The Lock Screen is a deterrent in the same spirit: it blocks casual viewing and clicking, but it is not encryption, anyone who can remove the extension can get past it, and a forgotten PIN has no recovery (reset the extension's data to start over). WA Blur is not affiliated with, endorsed by, or sponsored by WhatsApp or Meta.
 
 ## Guaranteed locales
 

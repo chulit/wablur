@@ -69,7 +69,7 @@ Exposure in which a nearby person can look at the screen in a shared physical sp
 _Avoid_: peeking
 
 **Lock**:
-A full-screen gate, unlocked by a PIN or password, that blocks viewing of WhatsApp Web entirely. Reserved term: Blur is never a Lock.
+A full-screen gate, unlocked by a PIN, that blocks viewing of WhatsApp Web entirely until the PIN is entered. Shipped in v1.5.0 (see grill-decisions amendment #5). Blur is never a Lock.
 _Avoid_: blur, hide
 
 **Settings**:
