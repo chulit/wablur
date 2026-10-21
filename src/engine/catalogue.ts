@@ -119,6 +119,11 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       '[aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]',
       '[role="group"][aria-label="Recent searches"] span[title][dir="auto"]',
       '[role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]',
+      // Contact/Group info panel (probed live 2026-10-21): the
+      // drawer root carries a locale-independent data-testid, and
+      // the identity texts (Name, phone, about) are bare dir="auto"
+      // spans — no title attributes anywhere in the drawer.
+      '[data-testid="chat-info-drawer"] span[dir="auto"]',
       // v2.3000 layer: rows were role="listitem".
       '[aria-label="Chat list"] [role="listitem"] span[title]',
       '[aria-label="Daftar chat"] [role="listitem"] span[title]',
@@ -158,6 +163,11 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       '[aria-label="Hasil pencarian."] [role="row"] img',
       '[role="group"][aria-label="Recent searches"] img',
       '[role="group"][aria-label="Pencarian terakhir"] img',
+      // Contact/Group info panel (probed live 2026-10-21): the
+      // profile photo is an SVG <image> (svg > g > image) — the
+      // only svg in the drawer containing an <image>; the other
+      // svgs are plain icons. The drawer holds no <img> at all.
+      '[data-testid="chat-info-drawer"] svg:has(image)',
       // v2.3000 layer: rows were role="listitem".
       'div[role="listitem"] img',
       // The open conversation's header avatar.
@@ -178,6 +188,16 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // Media inside message bubbles (structural).
       ".focusable-list-item img",
       ".focusable-list-item video",
+      // Media-canvas thumbnails (probed live 2026-10-21 on two
+      // surfaces: the Contact/Group info panel strip and the
+      // Media/Links/Docs view, which replaces the drawer — so the
+      // selector is deliberately NOT drawer-scoped; the component
+      // means Media wherever it appears). Background-image divs
+      // carrying a locale-independent data-testid, on the
+      // thumbnail element itself or its immediate parent —
+      // selecting the testid element covers both, as a filter on
+      // the parent blurs its subtree rendering.
+      '[data-testid="media-canvas-img"]',
       // Fallback layer: sticker element in the current generation.
       "div._amk4 ._am2s",
       // Fallback layer: media gallery thumbnails.

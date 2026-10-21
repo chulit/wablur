@@ -67,6 +67,23 @@
           <span dir="auto" title="Contact F">Contact F</span>
         </button>
       </div>
+      <!-- Contact/Group info panel (probed live 2026-10-21): the
+           drawer root carries a locale-independent data-testid;
+           identity texts are bare span[dir="auto"] (no title, and
+           no <img> anywhere in the drawer), the profile photo is
+           svg > g > image inside a button, and the media strip
+           thumbnails are background-image divs carrying
+           data-testid="media-canvas-img" — on the thumbnail's
+           parent or on the thumbnail itself (both probed shapes). -->
+      <div data-testid="chat-info-drawer">
+        <button type="button">
+          <div><div><svg><g><image href="avatar-g.png" /></g></svg></div></div>
+        </button>
+        <span dir="auto">Contact G</span>
+        <span dir="auto">Sample about text</span>
+        <div data-testid="media-canvas-img"><div style="background-image: url(sample-thumb.png)"></div></div>
+        <button type="button"><div data-testid="media-canvas-img" style="background-image: url(sample-thumb-2.png)"></div></button>
+      </div>
       <div id="main">
         <header>
           <img src="avatar-a.png" alt="" />

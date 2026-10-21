@@ -63,6 +63,23 @@
           <span dir="auto" title="Kontak F">Kontak F</span>
         </button>
       </div>
+      <!-- Panel info kontak/grup (di-probe live 2026-10-21):
+           akar drawer membawa data-testid yang bebas-lokal; teks
+           identitas adalah span[dir="auto"] polos (tanpa title,
+           dan tanpa <img> di seluruh drawer), foto profil adalah
+           svg > g > image di dalam tombol, dan thumbnail strip
+           media adalah div background-image ber-data-testid
+           "media-canvas-img" — pada induk thumbnail atau pada
+           thumbnail itu sendiri (kedua bentuk hasil probe). -->
+      <div data-testid="chat-info-drawer">
+        <button type="button">
+          <div><div><svg><g><image href="avatar-g.png" /></g></svg></div></div>
+        </button>
+        <span dir="auto">Kontak G</span>
+        <span dir="auto">Contoh teks tentang</span>
+        <div data-testid="media-canvas-img"><div style="background-image: url(sample-thumb.png)"></div></div>
+        <button type="button"><div data-testid="media-canvas-img" style="background-image: url(sample-thumb-2.png)"></div></button>
+      </div>
       <div id="main">
         <header>
           <img src="avatar-a.png" alt="" />

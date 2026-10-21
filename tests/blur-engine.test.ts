@@ -408,6 +408,76 @@ describe("compileCss search surfaces (v1.8.0)", () => {
   });
 });
 
+describe("compileCss info panel (v1.8.1)", () => {
+  // Selectors added for the Contact/Group info panel (live-probed
+  // 2026-10-21): the drawer root carries a locale-independent
+  // data-testid, the identity texts are bare dir="auto" spans, and
+  // the profile photo is the one drawer svg containing an <image>.
+  // The media-canvas thumbnail selector is deliberately unscoped —
+  // the same component renders in the Media/Links/Docs view, which
+  // replaces the drawer (also probed live 2026-10-21).
+  const panelSelectors: Record<string, readonly string[]> = {
+    names: ['[data-testid="chat-info-drawer"] span[dir="auto"]'],
+    avatars: ['[data-testid="chat-info-drawer"] svg:has(image)'],
+    media: ['[data-testid="media-canvas-img"]'],
+  };
+  // Target blur at the default global 8px: names ×0.6, avatars
+  // ×0.5, media ×2.5 — the panel inherits each target's own
+  // intensity, nothing panel-specific.
+  const pxByTarget: Record<string, number> = {
+    names: 5,
+    avatars: 4,
+    media: 20,
+  };
+  const ruleLine = (css: string, selector: string): string =>
+    css.split("\n").find((l) => l.startsWith(`${selector}{`)) ?? "";
+
+  it("each panel selector is catalogue data of the right target", () => {
+    for (const [id, selectors] of Object.entries(panelSelectors)) {
+      const def = CATALOGUE.find((d) => d.id === id);
+      for (const sel of selectors) {
+        expect(def?.selectors, `${id} should carry: ${sel}`).toContain(sel);
+      }
+    }
+  });
+
+  it("default settings emit a base rule per panel selector, at the target's intensity", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    const selectors = ruleSelectors(css);
+    for (const [id, sels] of Object.entries(panelSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(ruleLine(css, sel)).toContain(`blur(${pxByTarget[id]}px)`);
+      }
+    }
+  });
+
+  it("Standard Mode emits a Reveal hover rule per panel selector", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    for (const sels of Object.values(panelSelectors)) {
+      for (const sel of sels) {
+        const hover =
+          css.split("\n").find((l) => l.startsWith(`${sel}:hover{`)) ?? "";
+        expect(hover, `hover rule expected: ${sel}`).toContain(
+          "filter:none !important",
+        );
+      }
+    }
+  });
+
+  it("Screen Share Mode emits the base rules but no hover variants for them", () => {
+    const css = compileCss(resolveSettings({ mode: "screen-share" }));
+    expect(css).not.toContain(":hover");
+    const selectors = ruleSelectors(css);
+    for (const sels of Object.values(panelSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(css).not.toContain(`${sel}:hover`);
+      }
+    }
+  });
+});
+
 describe("resolveSettings blurStyle (v1.6.0)", () => {
   it("defaults to the classic blur, including for legacy objects without the key", () => {
     expect(resolveSettings(undefined).blurStyle).toBe("blur");
