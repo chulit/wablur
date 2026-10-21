@@ -3,6 +3,10 @@
 :root:not(.wa-blur-live) .focusable-list-item:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) #main > header + span{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) #main > header + span:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="selectable-text"]{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="selectable-text"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="url-element"]{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="url-element"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div._amk4 > ._amk6{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) div._amk4 > ._amk6:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) ._2AOIt div:first-child{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
@@ -25,6 +29,8 @@
 :root:not(.wa-blur-live) [data-testid="link-description"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [data-testid="link-gallery"] span[dir="auto"]:not([title]){filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [data-testid="link-gallery"] span[dir="auto"]:not([title]):hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="link-preview-container"] span[dir="ltr"]{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="link-preview-container"] span[dir="ltr"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div[role="listitem"] div._ak8k{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) div[role="listitem"] div._ak8k:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div[role="listitem"] .vQ0w7{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
@@ -47,6 +53,8 @@
 :root:not(.wa-blur-live) [data-testid="doc-gallery"] span[dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [data-testid="link-gallery"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [data-testid="link-gallery"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="author"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [data-testid="link-gallery"] [data-testid="author"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="listitem"] span[title]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="listitem"] span[title]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="listitem"] span[title]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}

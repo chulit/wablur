@@ -112,6 +112,22 @@
         <span data-testid="link-preview-title">Sample link title</span>
         <span data-testid="link-description">Sample link description</span>
         <div data-testid="link-preview-thumbnail-jpeg"></div>
+        <!-- Links entries are real message bubbles (probed live
+             2026-10-21): msg-container anatomy — the bubble author
+             name carries data-testid="author", the body text lives
+             in selectable-text spans, the URL in a url-element,
+             and the preview card (link-preview-container) holds
+             dir="ltr" spans, including the small domain line. -->
+        <div data-testid="msg-container">
+          <span data-testid="author" dir="auto">Contact A</span>
+          <span data-testid="selectable-text">Sample message body</span>
+          <span data-testid="selectable-text">with a sample link</span>
+          <span data-testid="url-element">https://example.invalid/sample</span>
+          <div data-testid="link-preview-container">
+            <span dir="ltr">example.invalid</span>
+          </div>
+          <span data-testid="msg-meta">12.00</span>
+        </div>
       </div>
       <div id="main">
         <header>

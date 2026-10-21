@@ -565,6 +565,83 @@ describe("compileCss gallery tabs (v1.8.2)", () => {
   });
 });
 
+describe("compileCss links gallery bubble (v1.8.3)", () => {
+  // Selectors closing the Links-tab escapes found in v1.8.2 live
+  // testing (2026-10-21): a link-gallery entry is a real message
+  // bubble (msg-container / tail-in / msg-meta) — the body text
+  // lives in selectable-text spans, the URL in a url-element,
+  // the bubble author name in an author span, and the small
+  // domain line under the preview card is a span[dir="ltr"]
+  // inside the link-preview-container. The Messages anchor
+  // (.focusable-list-item) does not exist in the gallery, so
+  // the body escaped until now.
+  const bubbleSelectors: Record<string, readonly string[]> = {
+    messages: [
+      '[data-testid="link-gallery"] [data-testid="selectable-text"]',
+      '[data-testid="link-gallery"] [data-testid="url-element"]',
+    ],
+    previews: [
+      '[data-testid="link-gallery"] [data-testid="link-preview-container"] span[dir="ltr"]',
+    ],
+    names: ['[data-testid="link-gallery"] [data-testid="author"]'],
+  };
+  // Target blur at the default global 8px: messages ×1,
+  // previews ×1, names ×0.6 — the bubble inherits each target's
+  // own intensity, nothing gallery-specific.
+  const pxByTarget: Record<string, number> = {
+    messages: 8,
+    previews: 8,
+    names: 5,
+  };
+  const ruleLine = (css: string, selector: string): string =>
+    css.split("\n").find((l) => l.startsWith(`${selector}{`)) ?? "";
+
+  it("each bubble selector is catalogue data of the right target", () => {
+    for (const [id, selectors] of Object.entries(bubbleSelectors)) {
+      const def = CATALOGUE.find((d) => d.id === id);
+      for (const sel of selectors) {
+        expect(def?.selectors, `${id} should carry: ${sel}`).toContain(sel);
+      }
+    }
+  });
+
+  it("default settings emit a base rule per bubble selector, at the target's intensity", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    const selectors = ruleSelectors(css);
+    for (const [id, sels] of Object.entries(bubbleSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(ruleLine(css, sel)).toContain(`blur(${pxByTarget[id]}px)`);
+      }
+    }
+  });
+
+  it("Standard Mode emits a Reveal hover rule per bubble selector", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    for (const sels of Object.values(bubbleSelectors)) {
+      for (const sel of sels) {
+        const hover =
+          css.split("\n").find((l) => l.startsWith(`${sel}:hover{`)) ?? "";
+        expect(hover, `hover rule expected: ${sel}`).toContain(
+          "filter:none !important",
+        );
+      }
+    }
+  });
+
+  it("Screen Share Mode emits the base rules but no hover variants for them", () => {
+    const css = compileCss(resolveSettings({ mode: "screen-share" }));
+    expect(css).not.toContain(":hover");
+    const selectors = ruleSelectors(css);
+    for (const sels of Object.values(bubbleSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(css).not.toContain(`${sel}:hover`);
+      }
+    }
+  });
+});
+
 describe("resolveSettings blurStyle (v1.6.0)", () => {
   it("defaults to the classic blur, including for legacy objects without the key", () => {
     expect(resolveSettings(undefined).blurStyle).toBe("blur");

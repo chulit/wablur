@@ -108,6 +108,22 @@
         <span data-testid="link-preview-title">Judul tautan contoh</span>
         <span data-testid="link-description">Deskripsi tautan contoh</span>
         <div data-testid="link-preview-thumbnail-jpeg"></div>
+        <!-- Entri Links adalah gelembung pesan asli (di-probe live
+             2026-10-21): anatomi msg-container — nama penulis
+             gelembung membawa data-testid="author", teks isi hidup
+             di span selectable-text, URL di url-element, dan kartu
+             preview (link-preview-container) memuat span
+             dir="ltr", termasuk baris domain kecil. -->
+        <div data-testid="msg-container">
+          <span data-testid="author" dir="auto">Kontak A</span>
+          <span data-testid="selectable-text">Isi pesan contoh</span>
+          <span data-testid="selectable-text">dengan tautan contoh</span>
+          <span data-testid="url-element">https://example.invalid/contoh</span>
+          <div data-testid="link-preview-container">
+            <span dir="ltr">example.invalid</span>
+          </div>
+          <span data-testid="msg-meta">12.00</span>
+        </div>
       </div>
       <div id="main">
         <header>

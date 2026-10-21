@@ -62,6 +62,15 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // bubble, so it belongs to Messages. With no pinned message,
       // the header's next sibling is the conversation div — no match.
       "#main > header + span",
+      // Links gallery entries (probed live 2026-10-21): a
+      // link-gallery entry reuses the conversation bubble anatomy
+      // (msg-container / tail-in / msg-meta), but the
+      // .focusable-list-item anchor above does not exist there —
+      // v1.8.2 live testing showed the Message body under each
+      // preview card staying readable. The body text lives in
+      // selectable-text spans and the URL in a url-element.
+      '[data-testid="link-gallery"] [data-testid="selectable-text"]',
+      '[data-testid="link-gallery"] [data-testid="url-element"]',
       // Fallback layer: current-generation obfuscated message structure.
       "div._amk4 > ._amk6",
       // Fallback layer: previous generation's message structure.
@@ -102,6 +111,11 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       '[data-testid="link-preview-title"]',
       '[data-testid="link-description"]',
       '[data-testid="link-gallery"] span[dir="auto"]:not([title])',
+      // Links gallery, second live pass (probed live 2026-10-21):
+      // the small domain line under a preview card (e.g.
+      // "id.shp.ee") escaped v1.8.2 — it is a span[dir="ltr"]
+      // inside the link-preview-container.
+      '[data-testid="link-gallery"] [data-testid="link-preview-container"] span[dir="ltr"]',
       // No semantic anchor existed for the Preview line in the
       // predecessor generations (research.md §3.1–§3.2) — the preview
       // text was class-addressed. v2.3000 layer:
@@ -145,6 +159,9 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // title + dir="auto" signature.
       '[data-testid="doc-gallery"] span[dir="auto"]',
       '[data-testid="link-gallery"] span[title][dir="auto"]',
+      // Bubble author names inside link-gallery entries carry
+      // their own data-testid (probed live 2026-10-21).
+      '[data-testid="link-gallery"] [data-testid="author"]',
       // v2.3000 layer: rows were role="listitem".
       '[aria-label="Chat list"] [role="listitem"] span[title]',
       '[aria-label="Daftar chat"] [role="listitem"] span[title]',
