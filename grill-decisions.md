@@ -104,6 +104,14 @@ Facts that amend or confirm the design above:
 
 - **Blur Type shipped as v1.6.0**: `Settings.blurStyle` ∈ {blur, mosaic, redact, frost, fade}, default `blur`, chosen via chips in the popup (one style for all targets; per-target styles were not requested). Implementation notes worth keeping: Mosaic uses an SVG pixelate filter whose defs the style sink owns (cell size derives from the global intensity); Redact splits by a new catalogue `kind` (text targets get solid bars, image targets `brightness(0)`); the classic blur's transition string is unchanged, so the static first-paint stylesheet stays byte-identical (ADR-0001 intact). Redact's hover restore uses the inherited text colour — in WhatsApp's DOM the revealed colour is the inherited one by construction. With this, the 2026-10-21 roadmap (Settings page → Lock Screen → Blur Type) is complete; remaining known gaps are coverage probes (fullscreen media viewer, contact/group info panel), not yet scheduled.
 
+### Amendment #7 — 2026-10-21 (user: "bisa ga settingnya gausah buka page baru. tetep di extensionnya gitu" → tap "Gas v1.7.0")
+
+- **The Settings page is deleted; Settings is a second view inside the popup** (v1.7.0), superseding amendment #4's `options_ui` framing — the popup is again the only surface, now with two views (gear switches, back returns, the view re-renders from current state on every open). All sections moved whole into `src/settings-view.ts`, including the Lock Screen card. One platform-forced adaptation, disclosed to and accepted by the user before building: **import is paste-JSON** (an extension popup closes when a file dialog opens, so a file picker can never complete there); export remains a download.
+
+### Amendment #8 — 2026-10-21 (live bug from the user's screenshot, fixed as v1.7.1)
+
+- **Mosaic no longer lets thin elements vanish.** The v1.6.0 pixelate recipe sampled the raw graphic at single grid points; elements whose points all missed painted pixels (thin text, plain avatars) rendered nothing at all. The filter now pre-spreads the graphic (gaussian blur at half the cell size) and firms the alpha before sampling, so every cell yields a block. The step is load-bearing and commented as such in `buildPixelateDefs` — do not simplify it away.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.

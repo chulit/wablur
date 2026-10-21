@@ -9,7 +9,7 @@ Visual Privacy for WhatsApp Web. WA Blur is a Chrome extension that blurs your c
 - A global **Toggle**: press `Alt+X` anywhere in Chrome, or use the master switch in the popup.
 - One intensity slider (4–24px, default 8px). Media blurs harder than text by design; you only ever learn one knob.
 - Five **Blur Types**, one look for everything: classic **Blur**, **Mosaic** (pixelated blocks — the intensity slider sets the block size), **Redact** (solid censor bars for text, blacked-out images), **Frost** (heavy milky wash), and **Fade** (greyscale with a light blur).
-- A **Settings page** (gear icon in the popup): Reveal delay, per-target intensity multipliers, and settings export/import/reset — for the knobs you rarely touch.
+- A **Settings view inside the popup** (gear icon, no separate page): Reveal delay, per-target intensity multipliers, Lock Screen management, and settings export/import/reset — for the knobs you rarely touch. Import pastes JSON text (a file picker cannot survive inside an extension popup).
 - A **Lock Screen**: an optional full-screen PIN gate over WhatsApp Web. Lock it from the popup or with `Alt+Shift+L`, or let it lock itself after inactivity (opt-in: 1/5/15/30 minutes). The PIN is stored only as a salted SHA-256 hash, in its own storage record, separate from your Settings.
 - **Local-Only**: the extension has no backend, makes no network requests, and collects nothing. Your Settings live in your browser's storage (`chrome.storage.sync`); if your browser sync is on, your *browser* may carry them — the extension itself never contacts a server.
 - Minimal by construction: the only permission it asks for is `storage`.
