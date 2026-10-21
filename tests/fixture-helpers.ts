@@ -15,8 +15,18 @@ export function loadFixture(name: string): Document {
  * ID counterpart ("Daftar chat", "foto profil") the ID fixture. All
  * other selectors are structural and must match both fixtures.
  */
-const ID_ANCHORS = ["Daftar chat", "foto profil"];
-const EN_ANCHORS = ["Chat list", "profile photo"];
+const ID_ANCHORS = [
+  "Daftar chat",
+  "foto profil",
+  "Hasil pencarian.",
+  "Pencarian terakhir",
+];
+const EN_ANCHORS = [
+  "Chat list",
+  "profile photo",
+  "Search results.",
+  "Recent searches",
+];
 
 export function selectorsForLocale(
   def: BlurTargetDef,

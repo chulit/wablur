@@ -22,6 +22,29 @@ describe("Indonesian anchor counterparts", () => {
       '[aria-label="Daftar chat"] [role="listitem"] span[title]',
     ],
     ['[aria-label="profile photo"] img', '[aria-label="foto profil"] img'],
+    // Search surfaces (v1.8.0): the ID labels are unverified
+    // fallback candidates — the pair is asserted as catalogue data
+    // and against the synthetic ID fixture, not as live evidence.
+    [
+      '[aria-label="Search results."] [role="row"] span[title][dir="auto"]',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]',
+    ],
+    [
+      '[aria-label="Search results."] [role="row"] span[title]:not([dir="auto"])',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"])',
+    ],
+    [
+      '[aria-label="Search results."] [role="row"] img',
+      '[aria-label="Hasil pencarian."] [role="row"] img',
+    ],
+    [
+      '[role="group"][aria-label="Recent searches"] span[title][dir="auto"]',
+      '[role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]',
+    ],
+    [
+      '[role="group"][aria-label="Recent searches"] img',
+      '[role="group"][aria-label="Pencarian terakhir"] img',
+    ],
   ];
 
   it("every label-anchored selector has an ID counterpart in the catalogue", () => {

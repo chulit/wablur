@@ -11,6 +11,10 @@
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="row"] span[title]:not([dir="auto"]):hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] span[title]:not([dir="auto"]){filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] span[title]:not([dir="auto"]):hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] span[title]:not([dir="auto"]){filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] span[title]:not([dir="auto"]):hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"]){filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"]):hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div[role="listitem"] div._ak8k{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) div[role="listitem"] div._ak8k:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div[role="listitem"] .vQ0w7{filter:blur(8px) !important;transition:filter 0.2s ease;transition-delay:0s;}
@@ -19,6 +23,14 @@
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="row"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Recent searches"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Recent searches"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="listitem"] span[title]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="listitem"] span[title]:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="listitem"] span[title]{filter:blur(5px) !important;transition:filter 0.2s ease;transition-delay:0s;}
@@ -41,6 +53,14 @@
 :root:not(.wa-blur-live) [aria-label="Chat list"] [role="row"] img:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) [aria-label="Daftar chat"] [role="row"] img:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Search results."] [role="row"] img:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [aria-label="Hasil pencarian."] [role="row"] img:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Recent searches"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Recent searches"] img:hover{filter:none !important;transition-delay:0.3s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Pencarian terakhir"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
+:root:not(.wa-blur-live) [role="group"][aria-label="Pencarian terakhir"] img:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) div[role="listitem"] img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}
 :root:not(.wa-blur-live) div[role="listitem"] img:hover{filter:none !important;transition-delay:0.3s;}
 :root:not(.wa-blur-live) #main header img{filter:blur(4px) !important;transition:filter 0.2s ease;transition-delay:0s;}

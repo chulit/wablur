@@ -39,6 +39,29 @@
             </div>
           </div>
         </div>
+        <!-- Hasil pencarian (label ID kandidat fallback, belum
+             terverifikasi live): baris hasil mencerminkan baris
+             daftar chat di dalam grid hasil berlabel lokal. -->
+        <div aria-label="Hasil pencarian.">
+          <div role="row">
+            <div role="gridcell"><div><img src="avatar-e.png" alt="" /></div></div>
+            <div>
+              <div role="gridcell">
+                <span dir="auto" title="Kontak E">Kontak E</span>
+                <span title="Contoh pratinjau pencarian E teks penuh">Contoh pratinjau pencarian E</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pencarian terakhir (label ID kandidat fallback): tinggal
+           di luar #pane-side; tiap item adalah tombol berisi img
+           dan span Nama span[title][dir="auto"]. -->
+      <div role="group" aria-label="Pencarian terakhir">
+        <button type="button">
+          <img src="avatar-f.png" alt="" />
+          <span dir="auto" title="Kontak F">Kontak F</span>
+        </button>
       </div>
       <div id="main">
         <header>

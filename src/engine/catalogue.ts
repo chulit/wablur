@@ -81,6 +81,13 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // localised Chat list label + row role; EN and ID side by side.
       '[aria-label="Chat list"] [role="row"] span[title]:not([dir="auto"])',
       '[aria-label="Daftar chat"] [role="row"] span[title]:not([dir="auto"])',
+      // Search results (probed live 2026-10-21): result rows mirror
+      // chat-list rows inside a localised results grid, so the
+      // Preview line is the same titled span without dir. The EN
+      // label is probed; the ID label is an unverified fallback
+      // candidate.
+      '[aria-label="Search results."] [role="row"] span[title]:not([dir="auto"])',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"])',
       // No semantic anchor existed for the Preview line in the
       // predecessor generations (research.md §3.1–§3.2) — the preview
       // text was class-addressed. v2.3000 layer:
@@ -102,6 +109,16 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // Chat list label + row role — EN and ID side by side.
       '[aria-label="Chat list"] [role="row"] span[title][dir="auto"]',
       '[aria-label="Daftar chat"] [role="row"] span[title][dir="auto"]',
+      // Search surfaces (probed live 2026-10-21): search-result
+      // rows mirror chat-list rows inside a localised results grid,
+      // and Recent searches items are buttons inside a localised
+      // group living outside #pane-side — the Name span carries
+      // title + dir="auto" in both. The EN labels are probed; the
+      // ID labels are unverified fallback candidates.
+      '[aria-label="Search results."] [role="row"] span[title][dir="auto"]',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]',
+      '[role="group"][aria-label="Recent searches"] span[title][dir="auto"]',
+      '[role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]',
       // v2.3000 layer: rows were role="listitem".
       '[aria-label="Chat list"] [role="listitem"] span[title]',
       '[aria-label="Daftar chat"] [role="listitem"] span[title]',
@@ -132,6 +149,15 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // exactly one img per chat-list row — the Avatar.
       '[aria-label="Chat list"] [role="row"] img',
       '[aria-label="Daftar chat"] [role="row"] img',
+      // Search surfaces (probed live 2026-10-21): the img of a
+      // search-result row inside the localised results grid, and
+      // the img of a Recent searches item (a button inside a
+      // localised group outside #pane-side). The EN labels are
+      // probed; the ID labels are unverified fallback candidates.
+      '[aria-label="Search results."] [role="row"] img',
+      '[aria-label="Hasil pencarian."] [role="row"] img',
+      '[role="group"][aria-label="Recent searches"] img',
+      '[role="group"][aria-label="Pencarian terakhir"] img',
       // v2.3000 layer: rows were role="listitem".
       'div[role="listitem"] img',
       // The open conversation's header avatar.

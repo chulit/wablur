@@ -328,6 +328,86 @@ describe("compileCss", () => {
   });
 });
 
+describe("compileCss search surfaces (v1.8.0)", () => {
+  // Selectors added for the two search surfaces (live-probed
+  // 2026-10-21): the search-results grid and the Recent searches
+  // group. The EN labels are probed; the ID labels are unverified
+  // fallback candidates carried as catalogue data.
+  const searchSelectors: Record<string, readonly string[]> = {
+    names: [
+      '[aria-label="Search results."] [role="row"] span[title][dir="auto"]',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title][dir="auto"]',
+      '[role="group"][aria-label="Recent searches"] span[title][dir="auto"]',
+      '[role="group"][aria-label="Pencarian terakhir"] span[title][dir="auto"]',
+    ],
+    previews: [
+      '[aria-label="Search results."] [role="row"] span[title]:not([dir="auto"])',
+      '[aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"])',
+    ],
+    avatars: [
+      '[aria-label="Search results."] [role="row"] img',
+      '[aria-label="Hasil pencarian."] [role="row"] img',
+      '[role="group"][aria-label="Recent searches"] img',
+      '[role="group"][aria-label="Pencarian terakhir"] img',
+    ],
+  };
+  // Target blur at the default global 8px: previews ×1, names ×0.6,
+  // avatars ×0.5 — the search surfaces inherit the target's own
+  // intensity, nothing search-specific.
+  const pxByTarget: Record<string, number> = {
+    names: 5,
+    previews: 8,
+    avatars: 4,
+  };
+  const ruleLine = (css: string, selector: string): string =>
+    css.split("\n").find((l) => l.startsWith(`${selector}{`)) ?? "";
+
+  it("each search selector is catalogue data of the right target", () => {
+    for (const [id, selectors] of Object.entries(searchSelectors)) {
+      const def = CATALOGUE.find((d) => d.id === id);
+      for (const sel of selectors) {
+        expect(def?.selectors, `${id} should carry: ${sel}`).toContain(sel);
+      }
+    }
+  });
+
+  it("default settings emit a base rule per search selector, at the target's intensity", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    const selectors = ruleSelectors(css);
+    for (const [id, sels] of Object.entries(searchSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(ruleLine(css, sel)).toContain(`blur(${pxByTarget[id]}px)`);
+      }
+    }
+  });
+
+  it("Standard Mode emits a Reveal hover rule per search selector", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    for (const sels of Object.values(searchSelectors)) {
+      for (const sel of sels) {
+        const hover =
+          css.split("\n").find((l) => l.startsWith(`${sel}:hover{`)) ?? "";
+        expect(hover, `hover rule expected: ${sel}`).toContain(
+          "filter:none !important",
+        );
+      }
+    }
+  });
+
+  it("Screen Share Mode emits the base rules but no hover variants for them", () => {
+    const css = compileCss(resolveSettings({ mode: "screen-share" }));
+    expect(css).not.toContain(":hover");
+    const selectors = ruleSelectors(css);
+    for (const sels of Object.values(searchSelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(css).not.toContain(`${sel}:hover`);
+      }
+    }
+  });
+});
+
 describe("resolveSettings blurStyle (v1.6.0)", () => {
   it("defaults to the classic blur, including for legacy objects without the key", () => {
     expect(resolveSettings(undefined).blurStyle).toBe("blur");

@@ -42,6 +42,30 @@
             </div>
           </div>
         </div>
+        <!-- Search results (probed live 2026-10-21): result rows
+             mirror chat-list rows inside a localised results grid —
+             gridcell(img), name span[title][dir="auto"], preview
+             span[title] without dir. -->
+        <div aria-label="Search results.">
+          <div role="row">
+            <div role="gridcell"><div><img src="avatar-e.png" alt="" /></div></div>
+            <div>
+              <div role="gridcell">
+                <span dir="auto" title="Contact E">Contact E</span>
+                <span title="Sample search preview E full text">Sample search preview E</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Recent searches (probed live 2026-10-21): lives outside
+           #pane-side; each item is a button carrying an img and the
+           Name span[title][dir="auto"]. No Previews exist here. -->
+      <div role="group" aria-label="Recent searches">
+        <button type="button">
+          <img src="avatar-f.png" alt="" />
+          <span dir="auto" title="Contact F">Contact F</span>
+        </button>
       </div>
       <div id="main">
         <header>
