@@ -16,10 +16,10 @@ export type Mode = "standard" | "screen-share";
 /**
  * The Blur Styles (v1.6.0, the maintainer's pick of five): how a
  * blurred target is rendered illegible. `blur` is the classic
- * gaussian; `mosaic` pixelates via an SVG filter the runtime plants
- * in the page (see PIXELATE_FILTER_ID); `redact` covers text with an
- * opaque bar and blacks images out; `frost` is a heavy frosted-glass
- * wash; `fade` desaturates with a lighter blur.
+ * gaussian; `mosaic` renders per-cell averaged blur through a grid
+ * mask (native CSS only, see baseDeclarations); `redact` covers text
+ * with an opaque bar and blacks images out; `frost` is a heavy
+ * frosted-glass wash; `fade` desaturates with a lighter blur.
  */
 export type BlurStyle = "blur" | "mosaic" | "redact" | "frost" | "fade";
 
@@ -32,16 +32,14 @@ export const BLUR_STYLES: readonly { id: BlurStyle; label: string }[] = [
   { id: "fade", label: "Fade" },
 ];
 
-/** Id of the SVG pixelate filter the style sink plants for Mosaic. */
-export const PIXELATE_FILTER_ID = "wa-blur-pixelate";
-
 const MOSAIC_MIN_CELL = 3;
 const MOSAIC_MAX_CELL = 18;
 
 /**
- * Mosaic cell size in px, derived from the global blur intensity:
- * cell = clamp(round(blurPx × 0.75), 3, 18). Pure, shared by the
- * runtime (which plants the filter) and its tests.
+ * Mosaic cell size in px, derived from a target's effective blur
+ * intensity: cell = clamp(round(blurPx × 0.75), 3, 18). Pure. It
+ * sizes the mask cell (and the blur radius) of the native Mosaic
+ * style; up to v1.7.4 it fed a planted SVG filter instead.
  */
 export function mosaicCellSize(blurPx: number): number {
   return Math.min(
@@ -273,7 +271,7 @@ function formatDelaySeconds(ms: number): string {
  * The Blur Style decides what "illegible" looks like (see
  * baseDeclarations); Reveal mechanics are style-independent, except
  * that Redact Reveals text by restoring colour rather than clearing
- * a filter.
+ * a filter, and Mosaic must also clear its grid mask.
  */
 /**
  * The classic blur style's transition — pinned byte-for-byte by the
@@ -307,11 +305,27 @@ function baseDeclarations(
       );
     case "fade":
       return `filter:blur(${Math.round(px / 2)}px) grayscale(1) !important;`;
-    case "mosaic":
-      // The filter itself is an SVG element the style sink plants in
-      // the page (its cell tracks the global intensity); CSS can only
-      // reference it.
-      return `filter:url("#${PIXELATE_FILTER_ID}") !important;`;
+    case "mosaic": {
+      // Mosaic = per-cell averaged blur seen through a grid mask: a
+      // native blur sized to the cell, cut into tiles by two
+      // repeating mask gradients. Native filters only, no referenced
+      // SVG — the v1.6.0–v1.7.4 SVG pixelate recipe was retired in
+      // v1.7.5 after live evidence that it renders unreliably on
+      // WhatsApp's page (some elements never render a url()
+      // filter, while native filters never failed).
+      const cell = mosaicCellSize(px);
+      const gap = Math.max(1, Math.round(cell * 0.3));
+      const tile = cell - gap;
+      const mask =
+        `repeating-linear-gradient(to right,#000 0 ${tile}px,transparent ${tile}px ${cell}px),` +
+        `repeating-linear-gradient(to bottom,#000 0 ${tile}px,transparent ${tile}px ${cell}px)`;
+      return (
+        `filter:blur(${cell}px) !important;` +
+        `-webkit-mask-image:${mask} !important;` +
+        `mask-image:${mask} !important;` +
+        `-webkit-mask-composite:source-in;mask-composite:intersect;`
+      );
+    }
     case "redact":
       // No filter can censor text: an opaque bar replaces it (the
       // glyphs keep their layout, the colour gives nothing away).
@@ -332,6 +346,11 @@ function hoverDeclarations(style: BlurStyle, kind: "text" | "image"): string {
     // chat DOM, and the background (the opaque bar) always restores
     // exactly.
     return "color:inherit !important;background-color:transparent !important;";
+  }
+  if (style === "mosaic") {
+    // Reveal must clear the grid mask as well as the blur, or the
+    // revealed content stays cut into tiles.
+    return "filter:none !important;-webkit-mask-image:none !important;mask-image:none !important;";
   }
   return "filter:none !important;";
 }

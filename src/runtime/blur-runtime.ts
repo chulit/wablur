@@ -1,6 +1,5 @@
 import {
   compileCss,
-  mosaicCellSize,
   resolveSettings,
   type CssText,
 } from "../engine/blur-engine.js";
@@ -20,13 +19,11 @@ export interface StoragePort {
 }
 
 /**
- * Applies compiled CSS. The second argument is the Mosaic cell size
- * when the Mosaic style needs its SVG pixelate filter planted in the
- * page, or null when the filter must be absent (any other style, or
- * the master Toggle off) — the compiled CSS alone cannot carry it,
- * because filter defs are DOM, not CSS.
+ * Applies compiled CSS. The compiled CSS is the whole story: every
+ * Blur Style — Mosaic included, since v1.7.5 — is native CSS, so no
+ * side channel (planted filter defs and the like) exists any more.
  */
-export type StyleSink = (css: CssText, mosaicCell?: number | null) => void;
+export type StyleSink = (css: CssText) => void;
 
 export async function startBlurRuntime(deps: {
   storage: StoragePort;
@@ -34,11 +31,7 @@ export async function startBlurRuntime(deps: {
 }): Promise<() => void> {
   const apply = (raw: unknown) => {
     const settings = resolveSettings(raw);
-    const mosaicCell =
-      settings.enabled && settings.blurStyle === "mosaic"
-        ? mosaicCellSize(settings.blurPx)
-        : null;
-    deps.styleSink(compileCss(settings), mosaicCell);
+    deps.styleSink(compileCss(settings));
   };
 
   let initial: unknown;

@@ -59,39 +59,27 @@ describe("BlurRuntime", () => {
   });
 });
 
-describe("BlurRuntime Mosaic cell plumbing (v1.6.0)", () => {
-  function collectCellSink() {
-    const cells: (number | null | undefined)[] = [];
-    return {
-      cells,
-      sink: (_css: CssText, cell?: number | null) => {
-        cells.push(cell);
-      },
-    };
-  }
-
-  it("passes the cell derived from blurPx while Mosaic is active", async () => {
+describe("BlurRuntime sink contract (v1.7.5)", () => {
+  it("calls the sink with exactly the compiled CSS — one argument, no cell plumbing", async () => {
+    const calls: unknown[][] = [];
     const storage = new InMemoryStorageAdapter({
       ...DEFAULT_SETTINGS,
       blurStyle: "mosaic",
     });
-    const { cells, sink } = collectCellSink();
-    const stop = await startBlurRuntime({ storage, styleSink: sink });
-    expect(cells).toEqual([6]); // blurPx 8 -> round(8 * 0.75)
-    storage.set({ ...DEFAULT_SETTINGS, blurStyle: "mosaic", blurPx: 24 });
-    expect(cells).toEqual([6, 18]);
-    stop();
-  });
-
-  it("passes null for other styles and when the master Toggle is off", async () => {
-    const storage = new InMemoryStorageAdapter({
-      ...DEFAULT_SETTINGS,
-      blurStyle: "frost",
+    const stop = await startBlurRuntime({
+      storage,
+      styleSink: (...args: unknown[]) => {
+        calls.push(args);
+      },
     });
-    const { cells, sink } = collectCellSink();
-    const stop = await startBlurRuntime({ storage, styleSink: sink });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(1);
+    // Mosaic rides the native path now: the mask grid is in the CSS
+    // itself, nothing is planted alongside it.
+    expect(calls[0]?.[0]).toContain("mask-image:repeating-linear-gradient");
     storage.set({ ...DEFAULT_SETTINGS, blurStyle: "mosaic", enabled: false });
-    expect(cells).toEqual([null, null]);
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toEqual([""]);
     stop();
   });
 });

@@ -394,15 +394,54 @@ describe("compileCss Blur Styles (v1.6.0)", () => {
     expect(hoverRuleFor(css, "media")).toContain("filter:none !important");
   });
 
-  it("mosaic: references the planted pixelate filter, for text and image targets alike", () => {
+  it("mosaic: per-cell averaged blur through a grid mask, for text and image targets alike", () => {
     const css = compileCss(resolveSettings({ blurStyle: "mosaic" }));
-    expect(firstRuleFor(css, "messages")).toContain(
-      'filter:url("#wa-blur-pixelate") !important;',
+    // Messages at blurPx 8 (multiplier ×1 -> px 8): cell 6, gap 2,
+    // tile 4. The mask cuts the blurred content into 4px tiles on a
+    // 6px grid, in both axes.
+    const mask =
+      "repeating-linear-gradient(to right,#000 0 4px,transparent 4px 6px)," +
+      "repeating-linear-gradient(to bottom,#000 0 4px,transparent 4px 6px)";
+    const rule = firstRuleFor(css, "messages");
+    expect(rule).toContain("filter:blur(6px) !important;");
+    expect(rule).toContain(`-webkit-mask-image:${mask} !important;`);
+    expect(rule).toContain(`mask-image:${mask} !important;`);
+    expect(rule).toContain(
+      "-webkit-mask-composite:source-in;mask-composite:intersect;",
     );
-    expect(firstRuleFor(css, "avatars")).toContain(
-      'filter:url("#wa-blur-pixelate") !important;',
+    // Avatars (multiplier ×0.5 -> px 4): cell 3, gap 1, tile 2.
+    const avatar = firstRuleFor(css, "avatars");
+    expect(avatar).toContain("filter:blur(3px) !important;");
+    expect(avatar).toContain("#000 0 2px,transparent 2px 3px");
+    // Native CSS only: no referenced SVG anywhere in Mosaic output.
+    expect(css).not.toContain("url(");
+  });
+
+  it("mosaic: the cell tracks the per-target multiplier", () => {
+    const css = compileCss(
+      resolveSettings({ blurStyle: "mosaic", multipliers: { messages: 3 } }),
     );
-    expect(hoverRuleFor(css, "messages")).toContain("filter:none !important");
+    // Messages px = round(8 × 3) = 24 -> cell 18, gap round(5.4) = 5,
+    // tile 13.
+    const rule = firstRuleFor(css, "messages");
+    expect(rule).toContain("filter:blur(18px) !important;");
+    expect(rule).toContain("#000 0 13px,transparent 13px 18px");
+  });
+
+  it("mosaic Reveal clears the filter and both grid masks", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "mosaic" }));
+    const hover = hoverRuleFor(css, "messages");
+    expect(hover).toContain("filter:none !important");
+    expect(hover).toContain("-webkit-mask-image:none !important");
+    expect(hover).toContain("mask-image:none !important");
+  });
+
+  it("mosaic in Screen Share Mode emits no hover rules", () => {
+    const css = compileCss(
+      resolveSettings({ blurStyle: "mosaic", mode: "screen-share" }),
+    );
+    expect(css).not.toContain(":hover");
+    expect(css).toContain("mask-composite:intersect;");
   });
 
   it("redact: text targets get an opaque bar, image targets are blacked out", () => {

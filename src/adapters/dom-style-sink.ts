@@ -1,11 +1,7 @@
-import {
-  PIXELATE_FILTER_ID,
-  type CssText,
-} from "../engine/blur-engine.js";
+import type { CssText } from "../engine/blur-engine.js";
 import type { StyleSink } from "../runtime/blur-runtime.js";
 
 export const STYLE_ELEMENT_ID = "wa-blur-style";
-export const DEFS_ELEMENT_ID = "wa-blur-defs";
 
 /**
  * Class the sink puts on <html> the moment the runtime takes over.
@@ -18,73 +14,16 @@ export const DEFS_ELEMENT_ID = "wa-blur-defs";
  */
 export const LIVE_CLASS = "wa-blur-live";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-/**
- * Builds the hidden SVG holding the Mosaic pixelate filter (the
- * classic flood/composite/tile/morphology recipe): a 1×1 flood
- * repeated on a `cell` grid samples the source at grid points, and
- * dilating each sample by cell/2 fills its square — DOM content
- * rendered as blocks. Built with createElementNS: innerHTML on SVG
- * elements is unreliable across DOM implementations. This is the
- * original v1.6.0 recipe, restored verbatim at the user's
- * preference (2026-10-21); the v1.7.1–v1.7.3 hardening variants
- * are retired.
- */
-function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
-  const svg = doc.createElementNS(SVG_NS, "svg") as SVGSVGElement;
-  svg.id = DEFS_ELEMENT_ID;
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("width", "0");
-  svg.setAttribute("height", "0");
-  svg.setAttribute("style", "position:absolute");
-
-  const filter = doc.createElementNS(SVG_NS, "filter");
-  filter.id = PIXELATE_FILTER_ID;
-  filter.setAttribute("x", "-5%");
-  filter.setAttribute("y", "-5%");
-  filter.setAttribute("width", "110%");
-  filter.setAttribute("height", "110%");
-
-  const flood = doc.createElementNS(SVG_NS, "feFlood");
-  flood.setAttribute("x", String(cell / 2));
-  flood.setAttribute("y", String(cell / 2));
-  flood.setAttribute("width", "1");
-  flood.setAttribute("height", "1");
-
-  const grid = doc.createElementNS(SVG_NS, "feComposite");
-  grid.setAttribute("width", String(cell));
-  grid.setAttribute("height", String(cell));
-
-  const tile = doc.createElementNS(SVG_NS, "feTile");
-  tile.setAttribute("result", "wa-blur-tile");
-
-  const sample = doc.createElementNS(SVG_NS, "feComposite");
-  sample.setAttribute("in", "SourceGraphic");
-  sample.setAttribute("in2", "wa-blur-tile");
-  sample.setAttribute("operator", "in");
-
-  const dilate = doc.createElementNS(SVG_NS, "feMorphology");
-  dilate.setAttribute("operator", "dilate");
-  dilate.setAttribute("radius", String(cell / 2));
-
-  filter.append(flood, grid, tile, sample, dilate);
-  svg.append(filter);
-  return svg;
-}
-
 /**
  * Production style sink: owns exactly one <style> element and
  * replaces its content wholesale on every apply — never appends new
  * elements (the leak in piyushraj's implementation, research.md
- * §3.1). It also owns the Mosaic filter defs: planted (and rebuilt
- * when the cell changes) only while the runtime passes a cell, and
- * removed the moment it passes null, so no stale filter can linger
- * after the style or the master Toggle changes.
+ * §3.1). Style-only since v1.7.5: Mosaic is native CSS now (blur +
+ * mask grid), so the planted SVG filter defs this sink used to own
+ * are gone entirely.
  */
 export function createDomStyleSink(doc: Document): StyleSink {
-  let plantedCell: number | null = null;
-  return (css: CssText, mosaicCell: number | null = null) => {
+  return (css: CssText) => {
     doc.documentElement.classList.add(LIVE_CLASS);
     let el = doc.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null;
     if (!el) {
@@ -93,16 +32,5 @@ export function createDomStyleSink(doc: Document): StyleSink {
       doc.head.appendChild(el);
     }
     el.textContent = css;
-
-    const defs = doc.getElementById(DEFS_ELEMENT_ID);
-    if (mosaicCell === null) {
-      defs?.remove();
-      plantedCell = null;
-    } else if (!defs || plantedCell !== mosaicCell) {
-      defs?.remove();
-      const host = doc.body ?? doc.documentElement;
-      host.appendChild(buildPixelateDefs(doc, mosaicCell));
-      plantedCell = mosaicCell;
-    }
   };
 }
