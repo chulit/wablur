@@ -85,6 +85,10 @@ Facts that amend or confirm the design above:
 
 - **Mode is RESTORED**, at Paduka Raja's tap ("Ikuti mockup persis: Mode Standard / Screen Share balik lagi"), superseding amendment #1 above. He supplied a new popup mockup (`design/popup-mockup-2026-10-21.png`) and adopted it wholesale as the popup's design. Consequences: (1) Settings field returns to `mode` ("standard" | "screen-share"); `resolveSettings` migrates a v1.1.x stored `hoverReveal` (false → screen-share, true → standard) and drops the key. (2) GLOSSARY once again defines Mode / Standard Mode / Screen Share Mode — with the Screen Share definition corrected to what the implementation does (gates Reveal only; per-target choices untouched), closing the latent mismatch amendment #1 had noted. (3) **Popup design authority changes**: the teenage-engineering DESIGN.md no longer governs the popup; the 2026-10-21 mockup does (pale blue-grey background, white 18px-radius cards, teal accent, pill toggles, per-target icons, intensity `px` badge, Local-Only footer card). The amber marker is retired entirely (it belonged to the superseded designs). The mockup's decorative "…" header button is omitted — no fake controls. DESIGN.md stays in the repo as the record of the v1.0.x popup.
 
+## Post-grill amendment #3 — 2026-10-21 (10:33 WIB)
+
+- **Extension icon replaced with the maintainer's own artwork**, superseding the icon half of **S1**. He supplied the artwork himself ("ini icon extensionnya"): abstract rounded squares / frosted glass in cyan-teal-navy, master at `src/assets/icon.png` (1130×1130 RGBA). The hairline eye SVG (`src/assets/icon.svg`) is deleted; `scripts/render-icons.sh` now scales the PNG master to the 16/32/48/128 PNGs, and the popup header tile shows the artwork as an `<img>` on a transparent tile (the artwork has transparent corners). Still never the WhatsApp logo; the product name in S1 is unchanged.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.

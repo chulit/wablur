@@ -12,7 +12,8 @@ import { SettingsStore } from "./runtime/settings-store.js";
  * passing.
  *
  * One renderer per popup section; mountPopup only orchestrates.
- * All icons are local inline SVG — no external assets.
+ * Section icons are local inline SVG and the header shows the
+ * packaged icon artwork (popup.html) — no external assets.
  */
 
 function svgIcon(body: string): string {

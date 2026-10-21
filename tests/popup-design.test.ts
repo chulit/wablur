@@ -19,7 +19,7 @@ const PALETTE = new Set([
   "#5a6d78", // inactive mode text
   "#0bb5c7", // accent (toggle on, slider)
   "#0899ad", // teal dark (active mode, Local-Only)
-  "#dff6f8", // pale teal (icon tile, active mode)
+  "#dff6f8", // pale teal (active mode)
   "#eaf7f8", // footer card tint
   "#f2f7f9", // inactive chip
   "#d8e2e7", // toggle off
@@ -65,7 +65,7 @@ describe("popup design tokens (mockup 2026-10-21)", () => {
   });
 });
 
-describe("extension icon (hairline eye, never the WhatsApp logo)", () => {
+describe("extension icon (user's artwork, installed 2026-10-21)", () => {
   it.each([16, 32, 48, 128])("icon-%ipx exists at exactly that size", (size) => {
     const path = new URL(`../extension/icons/icon-${size}.png`, import.meta.url);
     expect(existsSync(path)).toBe(true);

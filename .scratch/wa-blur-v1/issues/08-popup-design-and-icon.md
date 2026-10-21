@@ -25,3 +25,7 @@ Per the post-grill amendment (see `grill-decisions.md`): the popup's Mode contro
 ## Amendment #2 — 2026-10-21
 
 Superseded as the popup's design authority: the maintainer supplied a new popup mockup (`design/popup-mockup-2026-10-21.png`) and adopted it wholesale — pale blue-grey background, white rounded cards, teal accent, pill toggles, per-target icons, intensity px badge, Local-Only footer card. The DESIGN.md styling, square hairline toggles, carbon on-state and amber marker from this ticket's original criteria no longer apply to the popup (the hairline eye icon artwork is retained). See `grill-decisions.md` amendment #2.
+
+## Amendment #3 — 2026-10-21
+
+The extension icon was replaced with the maintainer's own artwork (see `grill-decisions.md` amendment #3): master `src/assets/icon.png`, `scripts/render-icons.sh` scales the PNG (the hairline eye SVG source is deleted), and the popup header tile renders the artwork as an `<img>` on a transparent tile. The dimension/manifest icon tests are unchanged in substance and pass against the new PNGs.

@@ -27,7 +27,12 @@ describe("popup header and footer (mockup 2026-10-21)", () => {
     expect(doc.querySelector(".tagline")?.textContent).toBe(
       "Visual Privacy for WhatsApp Web",
     );
-    expect(doc.querySelector(".app-icon svg")).not.toBeNull();
+    // Since v1.3.0 the tile shows the user's icon artwork as an
+    // image (previously an inline hairline-eye SVG).
+    const appIcon = doc.querySelector(".app-icon img");
+    expect(appIcon).not.toBeNull();
+    expect(appIcon?.getAttribute("src")).toBe("icons/icon-128.png");
+    expect(appIcon?.getAttribute("alt")).toBe("WA Blur");
   });
 
   it("renders the Local-Only footer card", async () => {
