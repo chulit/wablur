@@ -15,6 +15,26 @@ import type { LockStore } from "./lock-store.js";
 const HOST_ID = "wa-blur-lock";
 const CHECK_INTERVAL_MS = 15_000;
 
+/**
+ * Input signals that count as "the user is here". Listeners are
+ * registered in the capture phase so page handlers cannot starve
+ * the tracker by stopping propagation, and wheel/mousemove are
+ * first-class activity because scrolling and reading are active
+ * use — with pointerdown + keydown alone, the watcher locked the
+ * page mid-use at the 1-minute setting (live bug, 2026-10-21).
+ */
+const ACTIVITY_EVENTS: readonly string[] = [
+  "pointerdown",
+  "keydown",
+  "wheel",
+  "mousemove",
+  "touchstart",
+];
+const ACTIVITY_LISTENER_OPTIONS: AddEventListenerOptions = {
+  capture: true,
+  passive: true,
+};
+
 const LOCK_MARK =
   '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" ' +
   'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
@@ -220,16 +240,20 @@ export async function startLockRuntime(
 
   render(current);
   const unsubscribe = store.subscribe(render);
-  doc.addEventListener("pointerdown", noteActivity);
-  doc.addEventListener("keydown", noteActivity);
+  for (const type of ACTIVITY_EVENTS) {
+    doc.addEventListener(type, noteActivity, ACTIVITY_LISTENER_OPTIONS);
+  }
   doc.addEventListener("visibilitychange", onVisibility);
   const timer = setInterval(checkAutoLock, CHECK_INTERVAL_MS);
 
   return () => {
     stopped = true;
     unsubscribe();
-    doc.removeEventListener("pointerdown", noteActivity);
-    doc.removeEventListener("keydown", noteActivity);
+    for (const type of ACTIVITY_EVENTS) {
+      // Removal only matches a registration whose capture flag
+      // agrees, so teardown must pass capture back explicitly.
+      doc.removeEventListener(type, noteActivity, { capture: true });
+    }
     doc.removeEventListener("visibilitychange", onVisibility);
     clearInterval(timer);
     host?.remove();

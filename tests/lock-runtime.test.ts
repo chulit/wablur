@@ -186,4 +186,127 @@ describe("Lock auto-lock watcher", () => {
     expect((await store.read()).locked).toBe(false);
     stop();
   });
+
+  it("wheel scrolling resets the idle clock", async () => {
+    const { store } = await lockedStore();
+    await store.setAutoLockMinutes(5);
+    const doc = freshDocument();
+    let nowMs = 1_000_000;
+    const stop = await startLockRuntime({ store, doc, now: () => nowMs });
+
+    nowMs += 4 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("wheel"));
+    nowMs += 4 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("visibilitychange"));
+    await flush();
+    expect((await store.read()).locked).toBe(false);
+
+    // And it does engage once the wheel has been still past the limit.
+    nowMs += 2 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("visibilitychange"));
+    await flush();
+    expect((await store.read()).locked).toBe(true);
+    stop();
+  });
+
+  it("mouse movement resets the idle clock", async () => {
+    const { store } = await lockedStore();
+    await store.setAutoLockMinutes(5);
+    const doc = freshDocument();
+    let nowMs = 1_000_000;
+    const stop = await startLockRuntime({ store, doc, now: () => nowMs });
+
+    nowMs += 4 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("mousemove"));
+    nowMs += 4 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("visibilitychange"));
+    await flush();
+    expect((await store.read()).locked).toBe(false);
+    stop();
+  });
+
+  it("counts activity even when a page handler stops propagation", async () => {
+    const { store } = await lockedStore();
+    await store.setAutoLockMinutes(5);
+    const doc = freshDocument();
+    let nowMs = 1_000_000;
+    const stop = await startLockRuntime({ store, doc, now: () => nowMs });
+
+    // A page handler on an ancestor that swallows pointerdown in
+    // the bubble phase (as WhatsApp's own handlers may): a
+    // bubble-phase tracker on the document would never see it.
+    const app = doc.querySelector("#app")!;
+    const inner = doc.createElement("div");
+    app.appendChild(inner);
+    app.addEventListener("pointerdown", (event) => event.stopPropagation());
+
+    nowMs += 4 * 60_000;
+    inner.dispatchEvent(
+      new doc.defaultView!.Event("pointerdown", { bubbles: true }),
+    );
+    nowMs += 4 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("visibilitychange"));
+    await flush();
+    // 8 minutes since start but only 4 since the pointerdown:
+    // unlocked only if the capture-phase tracker saw the event.
+    expect((await store.read()).locked).toBe(false);
+    stop();
+  });
+
+  it("teardown removes every activity listener with its capture flag", async () => {
+    const { store } = await lockedStore();
+    await store.setAutoLockMinutes(5);
+    const doc = freshDocument();
+
+    const added: Array<{ type: string; capture: boolean }> = [];
+    const removed: Array<{ type: string; capture: boolean }> = [];
+    const captureOf = (
+      options?: boolean | AddEventListenerOptions | EventListenerOptions,
+    ): boolean =>
+      options === true ||
+      (typeof options === "object" &&
+        options !== null &&
+        options.capture === true);
+    const originalAdd = doc.addEventListener.bind(doc);
+    const originalRemove = doc.removeEventListener.bind(doc);
+    doc.addEventListener = ((
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | AddEventListenerOptions,
+    ) => {
+      added.push({ type, capture: captureOf(options) });
+      originalAdd(type, listener, options);
+    }) as typeof doc.addEventListener;
+    doc.removeEventListener = ((
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | EventListenerOptions,
+    ) => {
+      removed.push({ type, capture: captureOf(options) });
+      originalRemove(type, listener, options);
+    }) as typeof doc.removeEventListener;
+
+    let nowMs = 1_000_000;
+    const stop = await startLockRuntime({ store, doc, now: () => nowMs });
+    stop();
+
+    const activityTypes = [
+      "pointerdown",
+      "keydown",
+      "wheel",
+      "mousemove",
+      "touchstart",
+    ];
+    for (const type of activityTypes) {
+      expect(added).toContainEqual({ type, capture: true });
+      expect(removed).toContainEqual({ type, capture: true });
+    }
+
+    // Behaviourally: after teardown, activity and checks do nothing.
+    doc.dispatchEvent(new doc.defaultView!.Event("pointerdown"));
+    nowMs += 10 * 60_000;
+    doc.dispatchEvent(new doc.defaultView!.Event("visibilitychange"));
+    await flush();
+    expect((await store.read()).locked).toBe(false);
+  });
 });
