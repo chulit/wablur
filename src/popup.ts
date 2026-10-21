@@ -18,7 +18,7 @@ import { SettingsStore } from "./runtime/settings-store.js";
 
 function svgIcon(body: string): string {
   return (
-    `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" ` +
+    `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" ` +
     `stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ` +
     `stroke-linejoin="round" aria-hidden="true">${body}</svg>`
   );
@@ -49,7 +49,7 @@ const MODES: readonly { id: Mode; label: string; icon: string }[] = [
     label: "Standard",
     // Filled circle in the button's colour with a contrasting check.
     icon:
-      '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' +
+      '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
       '<circle cx="12" cy="12" r="9" fill="currentColor"/>' +
       '<polyline points="8.4 12.4 11 15 15.8 9.9" fill="none" stroke="#ffffff" ' +
       'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
