@@ -48,27 +48,29 @@ describe("DomStyleSink Mosaic defs (v1.6.0)", () => {
     const grid = defs[0]?.querySelector("feComposite");
     expect(grid?.getAttribute("width")).toBe("6");
     expect(grid?.getAttribute("height")).toBe("6");
-    const morph = defs[0]?.querySelector("feMorphology");
-    expect(morph?.getAttribute("operator")).toBe("dilate");
-    expect(morph?.getAttribute("radius")).toBe("3"); // cell / 2
+    const morphs = [...(defs[0]?.querySelectorAll("feMorphology") ?? [])];
+    const blocks = morphs[morphs.length - 1];
+    expect(blocks?.getAttribute("operator")).toBe("dilate");
+    expect(blocks?.getAttribute("radius")).toBe("3"); // cell / 2
     const flood = defs[0]?.querySelector("feFlood");
     expect(flood?.getAttribute("width")).toBe("1");
     expect(flood?.getAttribute("height")).toBe("1");
   });
 
-  it("pre-spreads the source before sampling, so thin elements cannot vanish (v1.7.1)", () => {
+  it("hardens the spread before sampling — average, firm, widen — so thin elements cannot vanish (v1.7.3)", () => {
     const doc = freshDoc();
     const sink = createDomStyleSink(doc);
     sink("a{}", 6);
     const defs = doc.querySelector(`#${DEFS_ELEMENT_ID}`);
 
-    // The pre-blur spreads the raw graphic by cell/2 into wa-blur-soft…
+    // Averaging: the pre-blur spreads the raw graphic by cell/2
+    // into wa-blur-soft, so each block carries a per-cell average.
     const spread = defs?.querySelector("feGaussianBlur");
     expect(spread?.getAttribute("in")).toBe("SourceGraphic");
     expect(spread?.getAttribute("stdDeviation")).toBe("3"); // cell / 2
     expect(spread?.getAttribute("result")).toBe("wa-blur-soft");
 
-    // …and the alpha ramp firms it into wa-blur-firm.
+    // Solidity: the alpha ramp firms it into wa-blur-firm.
     const firm = defs?.querySelector("feComponentTransfer");
     expect(firm?.getAttribute("in")).toBe("wa-blur-soft");
     expect(firm?.getAttribute("result")).toBe("wa-blur-firm");
@@ -77,62 +79,62 @@ describe("DomStyleSink Mosaic defs (v1.6.0)", () => {
     expect(firmAlpha?.getAttribute("slope")).toBe("3");
     expect(firmAlpha?.getAttribute("intercept")).toBe("0");
 
-    // The base chain's sampling composite (first in document order)
-    // must read the firmed copy — sampling the raw SourceGraphic
-    // alone is what let thin elements vanish. (The crisp chain added
-    // in v1.7.2 samples the raw graphic too, but only as a top
-    // layer over this base — see the merge test below.)
+    // Coverage guarantee: the firmed spread is dilated by a FULL
+    // cell into wa-blur-wide before sampling — every sample dot
+    // near content catches colour, so vanishing is impossible.
+    const morphs = [...(defs?.querySelectorAll("feMorphology") ?? [])];
+    const wide = morphs[0];
+    expect(wide?.getAttribute("in")).toBe("wa-blur-firm");
+    expect(wide?.getAttribute("operator")).toBe("dilate");
+    expect(wide?.getAttribute("radius")).toBe("6"); // full cell
+    expect(wide?.getAttribute("result")).toBe("wa-blur-wide");
+
+    // The sampling composite must read the widened copy — sampling
+    // anything narrower is what let thin elements vanish.
     const composites = [...(defs?.querySelectorAll("feComposite") ?? [])];
     const sample = composites.find((c) => c.getAttribute("operator") === "in");
-    expect(sample?.getAttribute("in")).toBe("wa-blur-firm");
+    expect(sample?.getAttribute("in")).toBe("wa-blur-wide");
     expect(sample?.getAttribute("in2")).toBe("wa-blur-tile");
   });
 
-  it("merges crisp raw samples over the coverage base (v1.7.2)", () => {
+  it("is a single sampling chain — no second layer, no merge (v1.7.3)", () => {
     const doc = freshDoc();
     const sink = createDomStyleSink(doc);
     sink("a{}", 6);
     const defs = doc.querySelector(`#${DEFS_ELEMENT_ID}`);
 
-    // The grid is shared: exactly one flood and one tile feed both
-    // sampling chains.
+    // Exactly one grid: one flood, one tile.
     expect(defs?.querySelectorAll("feFlood")).toHaveLength(1);
     expect(defs?.querySelectorAll("feTile")).toHaveLength(1);
 
-    // Two sampling composites over that grid: base reads the firmed
-    // pre-spread copy, crisp reads the raw SourceGraphic.
+    // Exactly one sampling composite over that grid, reading the
+    // widened spread.
     const samples = [...(defs?.querySelectorAll("feComposite") ?? [])].filter(
       (c) => c.getAttribute("operator") === "in",
     );
-    expect(samples).toHaveLength(2);
-    expect(samples.map((s) => s.getAttribute("in"))).toEqual([
-      "wa-blur-firm",
-      "SourceGraphic",
-    ]);
-    for (const s of samples) {
-      expect(s.getAttribute("in2")).toBe("wa-blur-tile");
-    }
+    expect(samples).toHaveLength(1);
+    expect(samples[0]?.getAttribute("in")).toBe("wa-blur-wide");
+    expect(samples[0]?.getAttribute("in2")).toBe("wa-blur-tile");
 
-    // Each chain dilates into its own named layer at cell / 2.
+    // Exactly two morphologies, in order: widen by the full cell,
+    // then dots → blocks at cell / 2 (the unnamed filter output).
     const morphs = [...(defs?.querySelectorAll("feMorphology") ?? [])];
-    expect(morphs.map((m) => m.getAttribute("result"))).toEqual([
-      "wa-blur-base",
-      "wa-blur-crisp",
+    expect(morphs).toHaveLength(2);
+    expect(morphs.map((m) => m.getAttribute("operator"))).toEqual([
+      "dilate",
+      "dilate",
     ]);
-    for (const m of morphs) {
-      expect(m.getAttribute("operator")).toBe("dilate");
-      expect(m.getAttribute("radius")).toBe("3"); // cell / 2
-    }
+    expect(morphs.map((m) => m.getAttribute("radius"))).toEqual(["6", "3"]);
+    expect(morphs[0]?.getAttribute("result")).toBe("wa-blur-wide");
+    expect(morphs[1]?.getAttribute("result")).toBeNull();
 
-    // feMerge paints base first, crisp over it — the crisp blocks
-    // win wherever raw samples hit, the base fills the gaps.
-    const merge = defs?.querySelector("feMerge");
-    expect(merge).not.toBeNull();
-    const nodes = [...(merge?.querySelectorAll("feMergeNode") ?? [])];
-    expect(nodes.map((n) => n.getAttribute("in"))).toEqual([
-      "wa-blur-base",
-      "wa-blur-crisp",
-    ]);
+    // The retired two-layer design leaves no trace: no feMerge and
+    // no base/crisp result names anywhere in the defs markup.
+    expect(defs?.querySelector("feMerge")).toBeNull();
+    expect(defs?.querySelectorAll("feMergeNode")).toHaveLength(0);
+    const markup = defs?.outerHTML ?? "";
+    expect(markup).not.toContain("wa-blur-crisp");
+    expect(markup).not.toContain("wa-blur-base");
   });
 
   it("sizes the pre-spread with the cell (stdDeviation = cell / 2 on rebuild)", () => {
@@ -160,7 +162,8 @@ describe("DomStyleSink Mosaic defs (v1.6.0)", () => {
     const defs = doc.querySelectorAll(`#${DEFS_ELEMENT_ID}`);
     expect(defs).toHaveLength(1);
     expect(defs[0]?.querySelector("feComposite")?.getAttribute("width")).toBe("10");
-    expect(defs[0]?.querySelector("feMorphology")?.getAttribute("radius")).toBe("5");
+    // First feMorphology is the widen step: radius tracks the full cell.
+    expect(defs[0]?.querySelector("feMorphology")?.getAttribute("radius")).toBe("10");
   });
 
   it("removes the defs when the cell becomes null (style switch or master off)", () => {
