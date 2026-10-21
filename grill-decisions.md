@@ -89,6 +89,12 @@ Facts that amend or confirm the design above:
 
 - **Extension icon replaced with the maintainer's own artwork**, superseding the icon half of **S1**. He supplied the artwork himself ("ini icon extensionnya"): abstract rounded squares / frosted glass in cyan-teal-navy, master at `src/assets/icon.png` (1130×1130 RGBA). The hairline eye SVG (`src/assets/icon.svg`) is deleted; `scripts/render-icons.sh` now scales the PNG master to the 16/32/48/128 PNGs, and the popup header tile shows the artwork as an `<img>` on a transparent tile (the artwork has transparent corners). Still never the WhatsApp logo; the product name in S1 is unchanged.
 
+### Amendment #4 — 2026-10-21 (user's taps: "Gas: halaman Settings + shortcut Alt+Shift+S (v1.4.0)", then the roadmap below)
+
+- **A Settings page exists**, superseding the "popup is the only surface" half of **R5**. It is an `options_ui` page (open in tab) reached from a gear icon in the popup header, and holds the rarely-touched knobs: **Reveal delay** (`revealDelayMs`, 100–800, default 300), **per-target intensity multipliers** (`multipliers`, 0.5–3 overrides on the catalogue constants), and **settings data** (export/import JSON, reset to defaults), plus an About section. The popup keeps the everyday controls; locale guarantees and the Local-Only promise are unchanged.
+- **`Alt+Shift+S` toggles Mode** (command `toggle-mode`), the parity sibling of `Alt+X` for the master Toggle.
+- **Roadmap approved the same day, in his order**: **v1.5.0 Lock Screen** — a full-screen PIN gate over WhatsApp Web (this activates the reserved term **Lock**, see GLOSSARY; PIN stored as a salted hash, honest deterrent-only framing, no recovery — Local-Only; auto-lock ships as an opt-in setting, default off; triggers: popup button, `Alt+Shift+L`) and **v1.6.0 Blur Type** — `blurStyle` with five values (Default blur, Mosaic, Redact, Frost, Fade), chosen in the popup.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.

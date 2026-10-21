@@ -5,9 +5,10 @@ Visual Privacy for WhatsApp Web. WA Blur is a Chrome extension that blurs your c
 ## What it does
 
 - Blurs six **Blur Targets**, each on its own toggle: **Messages**, **Previews**, **Names**, **Avatars**, **Media**, and the **Chat Header**. All six are blurred by default.
-- Two **Modes**: in **Standard Mode**, a blurred target **Reveals** only while your cursor rests on it (a 300ms pause, so a passing cursor reveals nothing). In **Screen Share Mode**, Reveal is off entirely — nothing is Revealed while you present.
+- Two **Modes**: in **Standard Mode**, a blurred target **Reveals** only while your cursor rests on it (a short pause — 300ms by default, adjustable — so a passing cursor reveals nothing). In **Screen Share Mode**, Reveal is off entirely — nothing is Revealed while you present. Switch modes from the popup or with `Alt+Shift+S`.
 - A global **Toggle**: press `Alt+X` anywhere in Chrome, or use the master switch in the popup.
 - One intensity slider (4–24px, default 8px). Media blurs harder than text by design; you only ever learn one knob.
+- A **Settings page** (gear icon in the popup): Reveal delay, per-target intensity multipliers, and settings export/import/reset — for the knobs you rarely touch.
 - **Local-Only**: the extension has no backend, makes no network requests, and collects nothing. Your Settings live in your browser's storage (`chrome.storage.sync`); if your browser sync is on, your *browser* may carry them — the extension itself never contacts a server.
 - Minimal by construction: the only permission it asks for is `storage`.
 
