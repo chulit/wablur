@@ -56,6 +56,44 @@ describe("DomStyleSink Mosaic defs (v1.6.0)", () => {
     expect(flood?.getAttribute("height")).toBe("1");
   });
 
+  it("pre-spreads the source before sampling, so thin elements cannot vanish (v1.7.1)", () => {
+    const doc = freshDoc();
+    const sink = createDomStyleSink(doc);
+    sink("a{}", 6);
+    const defs = doc.querySelector(`#${DEFS_ELEMENT_ID}`);
+
+    // The pre-blur spreads the raw graphic by cell/2 into wa-blur-soft…
+    const spread = defs?.querySelector("feGaussianBlur");
+    expect(spread?.getAttribute("in")).toBe("SourceGraphic");
+    expect(spread?.getAttribute("stdDeviation")).toBe("3"); // cell / 2
+    expect(spread?.getAttribute("result")).toBe("wa-blur-soft");
+
+    // …and the alpha ramp firms it into wa-blur-firm.
+    const firm = defs?.querySelector("feComponentTransfer");
+    expect(firm?.getAttribute("in")).toBe("wa-blur-soft");
+    expect(firm?.getAttribute("result")).toBe("wa-blur-firm");
+    const firmAlpha = firm?.querySelector("feFuncA");
+    expect(firmAlpha?.getAttribute("type")).toBe("linear");
+    expect(firmAlpha?.getAttribute("slope")).toBe("3");
+    expect(firmAlpha?.getAttribute("intercept")).toBe("0");
+
+    // The sampling composite must read the firmed copy, never the raw
+    // SourceGraphic — that is the whole point of the fix.
+    const composites = [...(defs?.querySelectorAll("feComposite") ?? [])];
+    const sample = composites.find((c) => c.getAttribute("operator") === "in");
+    expect(sample?.getAttribute("in")).toBe("wa-blur-firm");
+    expect(sample?.getAttribute("in2")).toBe("wa-blur-tile");
+  });
+
+  it("sizes the pre-spread with the cell (stdDeviation = cell / 2 on rebuild)", () => {
+    const doc = freshDoc();
+    const sink = createDomStyleSink(doc);
+    sink("a{}", 6);
+    sink("a{}", 10);
+    const defs = doc.querySelector(`#${DEFS_ELEMENT_ID}`);
+    expect(defs?.querySelector("feGaussianBlur")?.getAttribute("stdDeviation")).toBe("5");
+  });
+
   it("does not duplicate defs on repeated applies with the same cell", () => {
     const doc = freshDoc();
     const sink = createDomStyleSink(doc);

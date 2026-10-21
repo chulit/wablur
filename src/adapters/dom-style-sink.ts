@@ -25,7 +25,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
  * classic flood/composite/tile/morphology recipe): a 1×1 flood
  * repeated on a `cell` grid samples the source at grid points, and
  * dilating each sample by cell/2 fills its square — DOM content
- * rendered as blocks. Built with createElementNS: innerHTML on SVG
+ * rendered as blocks. The sampled source is a pre-spread copy of the
+ * graphic, never the raw SourceGraphic — see the comment at the
+ * feGaussianBlur below. Built with createElementNS: innerHTML on SVG
  * elements is unreliable across DOM implementations.
  */
 function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
@@ -43,6 +45,29 @@ function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   filter.setAttribute("width", "110%");
   filter.setAttribute("height", "110%");
 
+  // Pre-spread — do NOT remove (v1.7.1 fix, live report 2026-10-21):
+  // the sampling below reads the source at single grid points, so a
+  // block is produced only where a point lands on painted pixels.
+  // Thin text glyphs and sparse elements (plain avatars) leave most
+  // points on empty space — and an element whose points all miss
+  // rendered COMPLETELY INVISIBLE instead of mosaiced. Blurring the
+  // source by cell/2 first spreads every glyph's colour across its
+  // whole cell, and the feFuncA ramp firms the diluted alpha back up
+  // so the sampled blocks come out solid, not washed out.
+  const spread = doc.createElementNS(SVG_NS, "feGaussianBlur");
+  spread.setAttribute("in", "SourceGraphic");
+  spread.setAttribute("stdDeviation", String(cell / 2));
+  spread.setAttribute("result", "wa-blur-soft");
+
+  const firm = doc.createElementNS(SVG_NS, "feComponentTransfer");
+  firm.setAttribute("in", "wa-blur-soft");
+  firm.setAttribute("result", "wa-blur-firm");
+  const firmAlpha = doc.createElementNS(SVG_NS, "feFuncA");
+  firmAlpha.setAttribute("type", "linear");
+  firmAlpha.setAttribute("slope", "3");
+  firmAlpha.setAttribute("intercept", "0");
+  firm.appendChild(firmAlpha);
+
   const flood = doc.createElementNS(SVG_NS, "feFlood");
   flood.setAttribute("x", String(cell / 2));
   flood.setAttribute("y", String(cell / 2));
@@ -57,7 +82,7 @@ function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   tile.setAttribute("result", "wa-blur-tile");
 
   const sample = doc.createElementNS(SVG_NS, "feComposite");
-  sample.setAttribute("in", "SourceGraphic");
+  sample.setAttribute("in", "wa-blur-firm");
   sample.setAttribute("in2", "wa-blur-tile");
   sample.setAttribute("operator", "in");
 
@@ -65,7 +90,7 @@ function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   dilate.setAttribute("operator", "dilate");
   dilate.setAttribute("radius", String(cell / 2));
 
-  filter.append(flood, grid, tile, sample, dilate);
+  filter.append(spread, firm, flood, grid, tile, sample, dilate);
   svg.append(filter);
   return svg;
 }
