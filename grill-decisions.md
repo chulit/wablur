@@ -138,6 +138,11 @@ Facts that amend or confirm the design above:
 - **The Contact/Group info panel is covered** (v1.8.1), all live-probed 2026-10-21: drawer root `[data-testid="chat-info-drawer"]` (locale-independent, shared by contact and group info) — Names gains its bare `span[dir="auto"]` identity texts (name, phone, about); Avatars gains the profile photo, an SVG (`svg:has(image)` — the only image-bearing svg in the drawer); Media gains `[data-testid="media-canvas-img"]` **globally, without the drawer prefix**: probing showed the Media/Links/Docs view replaces the drawer yet reuses the same thumbnail component, and the all-chats media gallery renders it too (98 tiles probed). Gallery tile captions turned out to be covered already by the legacy Names fallback `div[role="listitem"] span[title]`.
 - Still open on the Media/Links/Docs view: the Docs and Links tabs' text rows (filenames, sender names, link titles) are unprobed.
 
+### Amendment #15 — 2026-10-21 (user: "lanjut di media, links, and docs", then "Gas v1.8.2")
+
+- **The Docs and Links tabs' texts are covered** (v1.8.2), completing the coverage arc that began with his search-surface report. All live-probed 2026-10-21: Docs live in `[data-testid="doc-gallery"]` (Names: bare `span[dir="auto"]`; Previews: the filename caption span `[data-testid="document-caption selectable-text"]` — the testid value contains a space — plus `span[title]`; Media: `[data-testid="document-thumb"]`). Links live in `[data-testid="link-gallery"]` (Names: `span[title][dir="auto"]` sender names; Previews: untitled `span[dir="auto"]` message snippets plus the dedicated `[data-testid="link-preview-title"]` / `[data-testid="link-description"]` spans, unscoped because those components exist only in link galleries; Avatars: gallery `img`; Media: `[data-testid="link-preview-thumbnail-jpeg"]`).
+- Coverage map after v1.8.2: chat list, conversation, search (results + recent), Contact/Group info panel, media gallery (Media tab), Docs tab, Links tab, all-chats media gallery. Known remaining gap: the fullscreen media VIEWER (single-item view) has never been probed.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
