@@ -147,6 +147,10 @@ Facts that amend or confirm the design above:
 
 - **Links-tab bubble bodies are covered** (v1.8.3). His v1.8.2 live test showed entry headers and preview cards blurred but the message body under each card fully readable (plus the small domain line). Entry-interior probe: link-gallery entries are real message bubbles (msg-container / tail-in / msg-meta) whose body lives in `[data-testid="selectable-text"]` spans and the URL in `[data-testid="url-element"]` — the Messages anchor `.focusable-list-item` does not exist in the gallery, hence the escape. Messages gains both testid selectors scoped to link-gallery; Previews gains `span[dir="ltr"]` inside `link-preview-container` (the domain line); Names gains `[data-testid="author"]` in link-gallery. Lesson recorded: container-level span censuses under-sample — probe the entry interior before mapping a gallery surface.
 
+### Amendment #17 — 2026-10-21 (user design image: "lock screen nya gini bisa ga?", then tap: no wallpaper)
+
+- **The Lock Screen wears his mockup's look** (v1.9.0; reference saved as design/lock-screen-mockup-2026-10-21.png). Presentation only — every lock behaviour (PIN verify, shake, triggers, auto-lock, idle tracking) is unchanged. At his explicit choice the background is NOT the mockup's wallpaper image: the page backdrop blur stays, strengthened (28px + saturate) under a deep-navy tint. Layout: white circular badge holding his real extension icon (chrome.runtime.getURL("icons/icon-128.png"), declared in web_accessible_resources; inline-SVG recreation of the grid mark as fallback), title "WA Blur", subtitle "Enter password to unlock WhatsApp", and a glass pill input (lock icon left, circular arrow submit right; Enter also submits; wrong PIN adds a red-tinted pill border alongside the existing shake). Copy follows the mockup (English).
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
