@@ -167,9 +167,39 @@ input.toggle:checked::after {
 input.toggle:focus-visible,
 input.slider:focus-visible,
 .mode-btn:focus-visible,
-.settings-btn:focus-visible {
+.settings-btn:focus-visible,
+.lock-btn:focus-visible {
   outline: 2px solid #0899ad;
   outline-offset: 2px;
+}
+
+/* Lock action — a card-width button under the master card. */
+.lock-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(18, 38, 46, 0.04);
+  color: #12262e;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lock-btn:hover {
+  background: #f2f7f9;
+  color: #0899ad;
+}
+
+.lock-icon {
+  display: inline-flex;
+  flex: none;
+  color: #0899ad;
 }
 
 /* Blur Mode — segmented pair of buttons. */

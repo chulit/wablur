@@ -4,7 +4,17 @@ import {
   serializeSettings,
   type Settings,
 } from "./engine/blur-engine.js";
-import { ChromeStorageAdapter } from "./adapters/chrome-storage.js";
+import {
+  AUTO_LOCK_CHOICES,
+  DEFAULT_LOCK_RECORD,
+  isValidPinFormat,
+  type LockRecord,
+} from "./engine/lock.js";
+import {
+  ChromeLockStorageAdapter,
+  ChromeStorageAdapter,
+} from "./adapters/chrome-storage.js";
+import { LockStore } from "./runtime/lock-store.js";
 import { SettingsStore } from "./runtime/settings-store.js";
 
 /**
@@ -21,6 +31,9 @@ export interface OptionsHooks {
   /** Extension version for the About section (the bootstrap reads
    *  it from the manifest; absent outside the extension). */
   version?: string;
+  /** Lock record seam for the Lock Screen card (the bootstrap
+   *  wires the real store; without it the card renders nothing). */
+  lockStore?: LockStore;
   /** Confirmation prompt for destructive actions. Defaults to the
    *  page window's confirm; where no prompt exists, the action is
    *  refused rather than assumed. */
@@ -61,6 +74,12 @@ export async function mountOptions(
   hooks: OptionsHooks = {},
 ): Promise<void> {
   const page: { settings: Settings } = { settings: await store.read() };
+  const lockStore = hooks.lockStore;
+  const lock: { record: LockRecord } = {
+    record: lockStore
+      ? await lockStore.read()
+      : { ...DEFAULT_LOCK_RECORD },
+  };
   const confirmFn: (message: string) => boolean =
     hooks.confirm ??
     ((message) => {
@@ -275,6 +294,167 @@ export async function mountOptions(
     el.append(importRow, error);
   }
 
+  function pinRow(
+    labelText: string,
+    inputClass: string,
+  ): { row: HTMLDivElement; input: HTMLInputElement } {
+    const row = doc.createElement("div");
+    row.className = "lock-row";
+    const label = doc.createElement("span");
+    label.className = "row-label";
+    label.textContent = labelText;
+    const input = doc.createElement("input");
+    input.type = "password";
+    input.className = `pin-input ${inputClass}`;
+    input.setAttribute("inputmode", "numeric");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("aria-label", labelText);
+    row.append(label, input);
+    return { row, input };
+  }
+
+  function renderLockSection(): void {
+    const el = doc.querySelector(".lock-section");
+    if (!el || !lockStore) return;
+    el.textContent = "";
+    el.append(
+      sectionTitle(doc, "Lock Screen"),
+      sectionDesc(
+        doc,
+        "A full-screen gate over WhatsApp Web, opened with a PIN you set. The Lock Screen deters casual access — it is not encryption, and anyone who can remove the extension or inspect the page can get past it. There is no PIN recovery: if you forget it, remove the extension's data from chrome://extensions to reset.",
+      ),
+    );
+
+    const error = doc.createElement("p");
+    error.className = "lock-error";
+
+    const refresh = async (): Promise<void> => {
+      lock.record = await lockStore.read();
+      renderLockSection();
+    };
+
+    const autoLockRow = (): HTMLDivElement => {
+      const row = doc.createElement("div");
+      row.className = "lock-row auto-lock-row";
+      const label = doc.createElement("span");
+      label.className = "row-label";
+      label.textContent = "Auto-lock";
+      const select = doc.createElement("select");
+      select.className = "auto-lock-select";
+      select.setAttribute("aria-label", "Auto-lock");
+      for (const minutes of AUTO_LOCK_CHOICES) {
+        const option = doc.createElement("option");
+        option.value = String(minutes);
+        option.textContent =
+          minutes === 0
+            ? "Off"
+            : `After ${minutes} minute${minutes === 1 ? "" : "s"}`;
+        select.append(option);
+      }
+      select.value = String(lock.record.autoLockMinutes);
+      select.addEventListener("change", () => {
+        void lockStore
+          .setAutoLockMinutes(Number(select.value))
+          .then((next) => {
+            lock.record = next;
+          });
+      });
+      row.append(label, select);
+      if (lock.record.pinHash === null) {
+        const hint = doc.createElement("span");
+        hint.className = "auto-lock-hint";
+        hint.textContent = "Applies once a PIN is set.";
+        row.append(hint);
+      }
+      return row;
+    };
+
+    if (lock.record.pinHash === null) {
+      // No PIN yet: the set-PIN form (PIN + confirmation).
+      const pin = pinRow("New PIN", "lock-new");
+      const confirmPin = pinRow("Confirm PIN", "lock-confirm");
+      const actions = doc.createElement("div");
+      actions.className = "lock-actions";
+      const setBtn = doc.createElement("button");
+      setBtn.type = "button";
+      setBtn.className = "btn set-pin-btn";
+      setBtn.textContent = "Set PIN";
+      setBtn.addEventListener("click", () => {
+        if (!isValidPinFormat(pin.input.value)) {
+          error.textContent = "PIN must be 4–6 digits.";
+          return;
+        }
+        if (pin.input.value !== confirmPin.input.value) {
+          error.textContent = "PINs do not match — try again.";
+          return;
+        }
+        void lockStore.setPin(pin.input.value).then(refresh);
+      });
+      actions.append(setBtn);
+      el.append(pin.row, confirmPin.row, actions, autoLockRow(), error);
+      return;
+    }
+
+    // PIN set: change (current + new + confirm), remove (current),
+    // and the auto-lock choice.
+    const status = doc.createElement("p");
+    status.className = "lock-status";
+    status.textContent =
+      "A PIN is set. Lock from the popup, with Alt+Shift+L, or automatically when idle.";
+    const current = pinRow("Current PIN", "lock-current");
+    const next = pinRow("New PIN", "lock-change-new");
+    const confirmNext = pinRow("Confirm new PIN", "lock-change-confirm");
+
+    const actions = doc.createElement("div");
+    actions.className = "lock-actions";
+    const changeBtn = doc.createElement("button");
+    changeBtn.type = "button";
+    changeBtn.className = "btn change-pin-btn";
+    changeBtn.textContent = "Change PIN";
+    changeBtn.addEventListener("click", () => {
+      void (async () => {
+        if (!(await lockStore.verifyPin(current.input.value))) {
+          error.textContent = "Current PIN is incorrect.";
+          return;
+        }
+        if (!isValidPinFormat(next.input.value)) {
+          error.textContent = "New PIN must be 4–6 digits.";
+          return;
+        }
+        if (next.input.value !== confirmNext.input.value) {
+          error.textContent = "New PINs do not match — try again.";
+          return;
+        }
+        await lockStore.setPin(next.input.value);
+        await refresh();
+      })();
+    });
+    const removeBtn = doc.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn remove-pin-btn";
+    removeBtn.textContent = "Remove PIN";
+    removeBtn.addEventListener("click", () => {
+      void (async () => {
+        if (!(await lockStore.verifyPin(current.input.value))) {
+          error.textContent = "Current PIN is incorrect.";
+          return;
+        }
+        await lockStore.clearPin();
+        await refresh();
+      })();
+    });
+    actions.append(changeBtn, removeBtn);
+    el.append(
+      status,
+      current.row,
+      next.row,
+      confirmNext.row,
+      actions,
+      autoLockRow(),
+      error,
+    );
+  }
+
   function renderAboutSection(): void {
     const el = doc.querySelector(".about-section");
     if (!el) return;
@@ -307,6 +487,7 @@ export async function mountOptions(
     renderRevealSection();
     renderIntensitySection();
     renderDataSection();
+    renderLockSection();
     renderAboutSection();
   }
 
@@ -319,7 +500,9 @@ if (
   document.getElementById("wa-blur-options")
 ) {
   const store = new SettingsStore(new ChromeStorageAdapter());
-  const hooks: OptionsHooks = {};
+  const hooks: OptionsHooks = {
+    lockStore: new LockStore(new ChromeLockStorageAdapter()),
+  };
   if (typeof chrome !== "undefined" && chrome.runtime?.getManifest) {
     hooks.version = chrome.runtime.getManifest().version;
   }

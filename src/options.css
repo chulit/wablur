@@ -182,7 +182,9 @@ input.slider::-moz-range-thumb {
 
 .btn:focus-visible,
 input.slider:focus-visible,
-.import-input:focus-visible {
+.import-input:focus-visible,
+.pin-input:focus-visible,
+.auto-lock-select:focus-visible {
   outline: 2px solid #0899ad;
   outline-offset: 2px;
 }
@@ -218,6 +220,64 @@ input.slider:focus-visible,
 }
 
 .import-error:empty {
+  display: none;
+}
+
+/* Lock Screen — PIN forms and the auto-lock choice. */
+.lock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.lock-row .row-label {
+  flex: 0 0 108px;
+  font-size: 12.5px;
+  color: #12262e;
+}
+
+.pin-input,
+.auto-lock-select {
+  padding: 7px 10px;
+  border: 1px solid #d8e2e7;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #12262e;
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.pin-input {
+  width: 180px;
+  letter-spacing: 3px;
+}
+
+.lock-status {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.lock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.auto-lock-hint {
+  font-size: 11.5px;
+  color: #7a8b96;
+}
+
+.lock-error {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: #b3261e;
+}
+
+.lock-error:empty {
   display: none;
 }
 

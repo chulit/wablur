@@ -1,6 +1,10 @@
 import { TARGET_METADATA, type BlurTargetId } from "./engine/catalogue.js";
 import type { Mode, Settings } from "./engine/blur-engine.js";
-import { ChromeStorageAdapter } from "./adapters/chrome-storage.js";
+import {
+  ChromeLockStorageAdapter,
+  ChromeStorageAdapter,
+} from "./adapters/chrome-storage.js";
+import { LockStore } from "./runtime/lock-store.js";
 import { SettingsStore } from "./runtime/settings-store.js";
 
 /**
@@ -92,6 +96,70 @@ function renderSettingsButton(
     onOpenSettings?.();
   });
   header.append(btn);
+}
+
+/** Feather-style padlock, drawn through the shared icon helper. */
+const LOCK_ICON = svgIcon(
+  '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+);
+
+/** Injected Lock wiring for the popup's Lock action (bootstrap). */
+export interface PopupLockDeps {
+  lockStore: LockStore;
+  /** Closes the popup after locking; absent in tests. */
+  closePopup?: () => void;
+}
+
+/**
+ * The Lock action, a card-width button under the master card. Its
+ * face follows the Lock record: with a PIN set it reads "Lock now"
+ * and engages the gate (the same state write Alt+Shift+L makes);
+ * without one it reads "Set up Lock" and opens the Settings page,
+ * where the PIN is created. The branch is re-read at click time so
+ * the button can never act on a stale face.
+ */
+function renderLockSection(
+  doc: Document,
+  lockDeps: PopupLockDeps,
+  onOpenSettings?: () => void,
+): void {
+  const lockEl = doc.querySelector(".lock-section");
+  if (!lockEl) return;
+  lockEl.textContent = "";
+
+  const btn = doc.createElement("button");
+  btn.type = "button";
+  btn.className = "lock-btn";
+
+  const icon = doc.createElement("span");
+  icon.className = "lock-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = LOCK_ICON;
+  const label = doc.createElement("span");
+  label.className = "lock-label";
+  btn.append(icon, label);
+
+  const paint = (hasPin: boolean) => {
+    label.textContent = hasPin ? "Lock now" : "Set up Lock";
+  };
+  paint(false);
+  void lockDeps.lockStore.read().then((record) => {
+    paint(record.pinHash !== null);
+  });
+
+  btn.addEventListener("click", () => {
+    void (async () => {
+      const record = await lockDeps.lockStore.read();
+      if (record.pinHash !== null) {
+        await lockDeps.lockStore.setLocked(true);
+        lockDeps.closePopup?.();
+      } else {
+        onOpenSettings?.();
+      }
+    })();
+  });
+
+  lockEl.append(btn);
 }
 
 function renderMasterSection(
@@ -261,10 +329,12 @@ export async function mountPopup(
   doc: Document,
   store: SettingsStore,
   onOpenSettings?: () => void,
+  lockDeps?: PopupLockDeps,
 ): Promise<void> {
   const settings = await store.read();
   renderSettingsButton(doc, onOpenSettings);
   renderMasterSection(doc, store, settings);
+  if (lockDeps) renderLockSection(doc, lockDeps, onOpenSettings);
   renderModeSection(doc, store, settings);
   renderTargetsSection(doc, store, settings);
   renderIntensitySection(doc, store, settings);
@@ -276,7 +346,17 @@ if (
   document.getElementById("wa-blur-popup")
 ) {
   const store = new SettingsStore(new ChromeStorageAdapter());
-  void mountPopup(document, store, () => {
-    chrome.runtime.openOptionsPage();
-  });
+  void mountPopup(
+    document,
+    store,
+    () => {
+      chrome.runtime.openOptionsPage();
+    },
+    {
+      lockStore: new LockStore(new ChromeLockStorageAdapter()),
+      closePopup: () => {
+        window.close();
+      },
+    },
+  );
 }
