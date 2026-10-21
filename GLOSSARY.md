@@ -72,6 +72,10 @@ _Avoid_: peeking
 A full-screen gate, unlocked by a PIN, that blocks viewing of WhatsApp Web entirely until the PIN is entered. Shipped in v1.5.0 (see grill-decisions amendment #5). Blur is never a Lock.
 _Avoid_: blur, hide
 
+**Blur Type**:
+The visual style every Blur Target is rendered in, chosen once for all targets: Blur (the classic gaussian), Mosaic (pixelated blocks), Redact (solid bars for text, blacked-out images), Frost (heavy wash), or Fade (greyscale with a light blur). Shipped in v1.6.0 (amendment #6).
+_Avoid_: effect, filter mode
+
 **Settings**:
 The user's own choices for which Blur Targets are blurred, in which Mode, and with what intensity.
 _Avoid_: preferences, config

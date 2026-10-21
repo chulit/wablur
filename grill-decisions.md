@@ -100,6 +100,10 @@ Facts that amend or confirm the design above:
 - **The Lock Screen shipped as v1.5.0**, activating the reserved term **Lock** exactly as the glossary always defined it and as ADR-0002 anticipated ("a separate deep module with its own interface"): a pure `engine/lock.ts`, a `LockStore` over its own storage key `wa-blur:lock` (Settings export/reset never carry or clear the PIN), and a Shadow-DOM overlay runtime. ADR-0002's v1 exclusion stands for v1; this amendment supersedes it for later versions at the user's explicit request.
 - Shape: PIN 4–6 digits, salted SHA-256 hash only; triggers = popup button, `Alt+Shift+L` (`lock-now`), and opt-in auto-lock after 1/5/15/30 idle minutes (default off, per his "dengan auto-lock" bundle read together with his queued order). Honest framing everywhere it is described: a deterrent for casual access, not encryption; no PIN recovery (reset via extension data). Permissions remain `storage` only.
 
+### Amendment #6 — 2026-10-21 (user: "fitur blur type: Default, mozaik, saran dari kamu" → tap "Gas 5 tipe")
+
+- **Blur Type shipped as v1.6.0**: `Settings.blurStyle` ∈ {blur, mosaic, redact, frost, fade}, default `blur`, chosen via chips in the popup (one style for all targets; per-target styles were not requested). Implementation notes worth keeping: Mosaic uses an SVG pixelate filter whose defs the style sink owns (cell size derives from the global intensity); Redact splits by a new catalogue `kind` (text targets get solid bars, image targets `brightness(0)`); the classic blur's transition string is unchanged, so the static first-paint stylesheet stays byte-identical (ADR-0001 intact). Redact's hover restore uses the inherited text colour — in WhatsApp's DOM the revealed colour is the inherited one by construction. With this, the 2026-10-21 roadmap (Settings page → Lock Screen → Blur Type) is complete; remaining known gaps are coverage probes (fullscreen media viewer, contact/group info panel), not yet scheduled.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
