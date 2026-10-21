@@ -80,6 +80,35 @@
         <div data-testid="media-canvas-img"><div style="background-image: url(sample-thumb.png)"></div></div>
         <button type="button"><div data-testid="media-canvas-img" style="background-image: url(sample-thumb-2.png)"></div></button>
       </div>
+      <!-- Tampilan galeri media, tab Docs (di-probe live
+           2026-10-21): wadah membawa data-testid="doc-gallery";
+           nama pengirim / teks bidi adalah span[dir="auto"] polos,
+           baris meta adalah span[title] (tidak pernah dir="auto"),
+           caption nama file adalah span polos dengan testid sendiri
+           (nilainya benar-benar mengandung spasi), dan thumbnail
+           dokumen membawa data-testid="document-thumb". -->
+      <div data-testid="doc-gallery">
+        <div data-testid="document-thumb"></div>
+        <span data-testid="document-caption selectable-text">Dokumen contoh.pdf</span>
+        <span dir="auto">Kontak A</span>
+        <span title="Meta dokumen contoh">Meta dokumen contoh</span>
+      </div>
+      <!-- Tampilan galeri media, tab Links (di-probe live
+           2026-10-21): wadah membawa data-testid="link-gallery";
+           nama pengirim mempertahankan tanda tangan klasik
+           span[title][dir="auto"], cuplikan pesan adalah
+           span[dir="auto"] tanpa title, judul dan deskripsi link
+           adalah span polos dengan testid sendiri, thumbnail link
+           membawa data-testid="link-preview-thumbnail-jpeg", dan
+           avatar entri adalah elemen <img> polos. -->
+      <div data-testid="link-gallery">
+        <img src="avatar-a.png" alt="" />
+        <span dir="auto" title="Kontak A">Kontak A</span>
+        <span dir="auto">Contoh pesan berisi tautan</span>
+        <span data-testid="link-preview-title">Judul tautan contoh</span>
+        <span data-testid="link-description">Deskripsi tautan contoh</span>
+        <div data-testid="link-preview-thumbnail-jpeg"></div>
+      </div>
       <div id="main">
         <header>
           <img src="avatar-a.png" alt="" />

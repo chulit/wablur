@@ -84,6 +84,35 @@
         <div data-testid="media-canvas-img"><div style="background-image: url(sample-thumb.png)"></div></div>
         <button type="button"><div data-testid="media-canvas-img" style="background-image: url(sample-thumb-2.png)"></div></button>
       </div>
+      <!-- Media gallery view, Docs tab (probed live 2026-10-21):
+           the container carries data-testid="doc-gallery"; sender
+           names / bidi texts are bare span[dir="auto"], meta lines
+           are span[title] (never dir="auto"), the filename caption
+           is a plain span with its own testid (the value literally
+           contains a space), and document thumbnails carry
+           data-testid="document-thumb". -->
+      <div data-testid="doc-gallery">
+        <div data-testid="document-thumb"></div>
+        <span data-testid="document-caption selectable-text">Sample document.pdf</span>
+        <span dir="auto">Contact A</span>
+        <span title="Sample document meta">Sample document meta</span>
+      </div>
+      <!-- Media gallery view, Links tab (probed live 2026-10-21):
+           the container carries data-testid="link-gallery"; sender
+           names keep the classic span[title][dir="auto"] signature,
+           message snippets are span[dir="auto"] without title, link
+           titles and descriptions are plain spans with their own
+           testids, link thumbnails carry
+           data-testid="link-preview-thumbnail-jpeg", and entry
+           avatars are plain <img> elements. -->
+      <div data-testid="link-gallery">
+        <img src="avatar-a.png" alt="" />
+        <span dir="auto" title="Contact A">Contact A</span>
+        <span dir="auto">Sample message with a link</span>
+        <span data-testid="link-preview-title">Sample link title</span>
+        <span data-testid="link-description">Sample link description</span>
+        <div data-testid="link-preview-thumbnail-jpeg"></div>
+      </div>
       <div id="main">
         <header>
           <img src="avatar-a.png" alt="" />

@@ -478,6 +478,93 @@ describe("compileCss info panel (v1.8.1)", () => {
   });
 });
 
+describe("compileCss gallery tabs (v1.8.2)", () => {
+  // Selectors added for the Docs and Links tabs of the Media
+  // gallery view (live-probed 2026-10-21): both tab containers
+  // carry locale-independent data-testids. In doc-gallery the
+  // sender names are bare dir="auto" spans and the filename
+  // caption is a plain span with its own testid (value contains a
+  // space); in link-gallery the sender names keep the classic
+  // title + dir="auto" signature, message snippets are dir="auto"
+  // without title, and link titles/descriptions/thumbnails carry
+  // their own testids (the link-preview-* ones deliberately
+  // unscoped — those components only exist inside link galleries).
+  const gallerySelectors: Record<string, readonly string[]> = {
+    names: [
+      '[data-testid="doc-gallery"] span[dir="auto"]',
+      '[data-testid="link-gallery"] span[title][dir="auto"]',
+    ],
+    previews: [
+      '[data-testid="doc-gallery"] [data-testid="document-caption selectable-text"]',
+      '[data-testid="doc-gallery"] span[title]',
+      '[data-testid="link-preview-title"]',
+      '[data-testid="link-description"]',
+      '[data-testid="link-gallery"] span[dir="auto"]:not([title])',
+    ],
+    avatars: ['[data-testid="link-gallery"] img'],
+    media: [
+      '[data-testid="document-thumb"]',
+      '[data-testid="link-preview-thumbnail-jpeg"]',
+    ],
+  };
+  // Target blur at the default global 8px: names ×0.6, previews
+  // ×1, avatars ×0.5, media ×2.5 — the gallery tabs inherit each
+  // target's own intensity, nothing gallery-specific.
+  const pxByTarget: Record<string, number> = {
+    names: 5,
+    previews: 8,
+    avatars: 4,
+    media: 20,
+  };
+  const ruleLine = (css: string, selector: string): string =>
+    css.split("\n").find((l) => l.startsWith(`${selector}{`)) ?? "";
+
+  it("each gallery selector is catalogue data of the right target", () => {
+    for (const [id, selectors] of Object.entries(gallerySelectors)) {
+      const def = CATALOGUE.find((d) => d.id === id);
+      for (const sel of selectors) {
+        expect(def?.selectors, `${id} should carry: ${sel}`).toContain(sel);
+      }
+    }
+  });
+
+  it("default settings emit a base rule per gallery selector, at the target's intensity", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    const selectors = ruleSelectors(css);
+    for (const [id, sels] of Object.entries(gallerySelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(ruleLine(css, sel)).toContain(`blur(${pxByTarget[id]}px)`);
+      }
+    }
+  });
+
+  it("Standard Mode emits a Reveal hover rule per gallery selector", () => {
+    const css = compileCss(DEFAULT_SETTINGS);
+    for (const sels of Object.values(gallerySelectors)) {
+      for (const sel of sels) {
+        const hover =
+          css.split("\n").find((l) => l.startsWith(`${sel}:hover{`)) ?? "";
+        expect(hover, `hover rule expected: ${sel}`).toContain(
+          "filter:none !important",
+        );
+      }
+    }
+  });
+
+  it("Screen Share Mode emits the base rules but no hover variants for them", () => {
+    const css = compileCss(resolveSettings({ mode: "screen-share" }));
+    expect(css).not.toContain(":hover");
+    const selectors = ruleSelectors(css);
+    for (const sels of Object.values(gallerySelectors)) {
+      for (const sel of sels) {
+        expect(selectors, `base rule expected: ${sel}`).toContain(sel);
+        expect(css).not.toContain(`${sel}:hover`);
+      }
+    }
+  });
+});
+
 describe("resolveSettings blurStyle (v1.6.0)", () => {
   it("defaults to the classic blur, including for legacy objects without the key", () => {
     expect(resolveSettings(undefined).blurStyle).toBe("blur");

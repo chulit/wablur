@@ -88,6 +88,20 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // candidate.
       '[aria-label="Search results."] [role="row"] span[title]:not([dir="auto"])',
       '[aria-label="Hasil pencarian."] [role="row"] span[title]:not([dir="auto"])',
+      // Media gallery view, Docs + Links tabs (probed live
+      // 2026-10-21): the Docs filename caption is a plain span with
+      // its own data-testid (the value literally contains a space)
+      // and the Docs meta lines are span[title] without dir; link
+      // titles and descriptions are plain spans with their own
+      // testids, and the message snippet inside a link entry is a
+      // bare span[dir="auto"] without title. The link-preview-*
+      // testids are deliberately unscoped — those components only
+      // exist inside link galleries.
+      '[data-testid="doc-gallery"] [data-testid="document-caption selectable-text"]',
+      '[data-testid="doc-gallery"] span[title]',
+      '[data-testid="link-preview-title"]',
+      '[data-testid="link-description"]',
+      '[data-testid="link-gallery"] span[dir="auto"]:not([title])',
       // No semantic anchor existed for the Preview line in the
       // predecessor generations (research.md §3.1–§3.2) — the preview
       // text was class-addressed. v2.3000 layer:
@@ -124,6 +138,13 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // the identity texts (Name, phone, about) are bare dir="auto"
       // spans — no title attributes anywhere in the drawer.
       '[data-testid="chat-info-drawer"] span[dir="auto"]',
+      // Media gallery view, Docs + Links tabs (probed live
+      // 2026-10-21): inside doc-gallery the sender names / bidi
+      // texts are bare span[dir="auto"] (no title); inside
+      // link-gallery the sender names keep the classic
+      // title + dir="auto" signature.
+      '[data-testid="doc-gallery"] span[dir="auto"]',
+      '[data-testid="link-gallery"] span[title][dir="auto"]',
       // v2.3000 layer: rows were role="listitem".
       '[aria-label="Chat list"] [role="listitem"] span[title]',
       '[aria-label="Daftar chat"] [role="listitem"] span[title]',
@@ -168,6 +189,9 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // only svg in the drawer containing an <image>; the other
       // svgs are plain icons. The drawer holds no <img> at all.
       '[data-testid="chat-info-drawer"] svg:has(image)',
+      // Media gallery view, Links tab (probed live 2026-10-21):
+      // entry avatars are plain <img> elements inside link-gallery.
+      '[data-testid="link-gallery"] img',
       // v2.3000 layer: rows were role="listitem".
       'div[role="listitem"] img',
       // The open conversation's header avatar.
@@ -198,6 +222,12 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
       // selecting the testid element covers both, as a filter on
       // the parent blurs its subtree rendering.
       '[data-testid="media-canvas-img"]',
+      // Media gallery view thumbnails (probed live 2026-10-21):
+      // document thumbnails in the Docs tab and link-preview
+      // thumbnails in the Links tab carry their own
+      // locale-independent data-testids.
+      '[data-testid="document-thumb"]',
+      '[data-testid="link-preview-thumbnail-jpeg"]',
       // Fallback layer: sticker element in the current generation.
       "div._amk4 ._am2s",
       // Fallback layer: media gallery thumbnails.
