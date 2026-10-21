@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { compileCss, DEFAULT_SETTINGS, resolveSettings, toggle } from "../src/engine/blur-engine.js";
+import {
+  compileCss,
+  DEFAULT_SETTINGS,
+  parseSettings,
+  resolveSettings,
+  serializeSettings,
+  toggle,
+} from "../src/engine/blur-engine.js";
 
 describe("toggle", () => {
   it("flips only the master flag, preserving targets, mode, and intensity", () => {
@@ -7,12 +14,16 @@ describe("toggle", () => {
       enabled: true,
       mode: "screen-share",
       blurPx: 15,
+      revealDelayMs: 500,
+      multipliers: { media: 1.5 },
       targets: { media: false, names: false },
     });
     const off = toggle(s);
     expect(off.enabled).toBe(false);
     expect(off.mode).toBe("screen-share");
     expect(off.blurPx).toBe(15);
+    expect(off.revealDelayMs).toBe(500);
+    expect(off.multipliers).toEqual({ media: 1.5 });
     expect(off.targets).toEqual(s.targets);
     expect(s.enabled).toBe(true); // input not mutated
   });
@@ -113,6 +124,66 @@ describe("resolveSettings", () => {
       resolveSettings({ mode: "standard", hoverReveal: false }).mode,
     ).toBe("standard");
   });
+
+  it("defaults the Reveal delay to 300ms and clamps it into 100..800", () => {
+    expect(resolveSettings(undefined).revealDelayMs).toBe(300);
+    expect(resolveSettings({ revealDelayMs: 250 }).revealDelayMs).toBe(250);
+    expect(resolveSettings({ revealDelayMs: 50 }).revealDelayMs).toBe(100);
+    expect(resolveSettings({ revealDelayMs: 5000 }).revealDelayMs).toBe(800);
+    expect(resolveSettings({ revealDelayMs: "slow" }).revealDelayMs).toBe(300);
+    expect(resolveSettings({ revealDelayMs: Number.NaN }).revealDelayMs).toBe(300);
+  });
+
+  it("resolves multiplier overrides: known ids only, finite, clamped to 0.5..3", () => {
+    expect(resolveSettings(undefined).multipliers).toEqual({});
+    expect(resolveSettings({ multipliers: "lots" }).multipliers).toEqual({});
+    const s = resolveSettings({
+      multipliers: {
+        media: 1.5,
+        names: 0.1, // clamped up to 0.5
+        avatars: 99, // clamped down to 3
+        previews: "strong", // dropped: not a number
+        chatHeader: Number.NaN, // dropped: not finite
+        bogus: 2, // dropped: not a Blur Target
+      },
+    });
+    expect(s.multipliers).toEqual({ media: 1.5, names: 0.5, avatars: 3 });
+  });
+});
+
+describe("serializeSettings / parseSettings", () => {
+  it("round-trips a resolved Settings through JSON", () => {
+    const s = resolveSettings({
+      mode: "screen-share",
+      blurPx: 12,
+      revealDelayMs: 450,
+      multipliers: { media: 1.5 },
+      targets: { names: false },
+    });
+    expect(parseSettings(serializeSettings(s))).toEqual(s);
+  });
+
+  it("serialises to a JSON document of the complete Settings", () => {
+    const parsed = JSON.parse(serializeSettings(DEFAULT_SETTINGS)) as unknown;
+    expect(parsed).toEqual(JSON.parse(JSON.stringify(DEFAULT_SETTINGS)));
+  });
+
+  it("returns null for text that is not a JSON object", () => {
+    expect(parseSettings("not json")).toBeNull();
+    expect(parseSettings("")).toBeNull();
+    expect(parseSettings("[1,2,3]")).toBeNull();
+    expect(parseSettings("42")).toBeNull();
+    expect(parseSettings('"settings"')).toBeNull();
+  });
+
+  it("a partial or older export resolves into complete Settings", () => {
+    const s = parseSettings('{"blurPx": 10, "hoverReveal": false}');
+    expect(s).not.toBeNull();
+    expect(s?.blurPx).toBe(10);
+    expect(s?.mode).toBe("screen-share"); // legacy key still migrates
+    expect(s?.revealDelayMs).toBe(300);
+    expect(s?.multipliers).toEqual({});
+  });
 });
 
 describe("compileCss", () => {
@@ -187,6 +258,55 @@ describe("compileCss", () => {
     const css = compileCss(resolveSettings({ mode: "screen-share" }));
     expect(css).not.toContain(":hover");
     expect(css).toContain("blur(8px)");
+  });
+
+  it("formats the Reveal delay compactly in hover rules (250 -> 0.25s, 800 -> 0.8s)", () => {
+    for (const [ms, expected] of [
+      [100, "0.1s"],
+      [250, "0.25s"],
+      [450, "0.45s"],
+      [800, "0.8s"],
+    ] as const) {
+      const css = compileCss(resolveSettings({ revealDelayMs: ms }));
+      const hover = css.split("\n").filter((l) => l.includes(":hover"));
+      expect(hover.length).toBeGreaterThan(0);
+      for (const l of hover) {
+        expect(l).toContain(`transition-delay:${expected}`);
+      }
+      // Base rules keep the 0s delay: re-blur stays immediate
+      // whatever the Reveal delay is.
+      const base = css.split("\n").filter((l) => !l.includes(":hover"));
+      for (const l of base) expect(l).toContain("transition-delay:0s");
+    }
+  });
+
+  it("a custom Reveal delay never resurrects hover rules in Screen Share Mode", () => {
+    const css = compileCss(
+      resolveSettings({ mode: "screen-share", revealDelayMs: 800 }),
+    );
+    expect(css).not.toContain(":hover");
+  });
+
+  it("multiplier overrides replace the catalogue multiplier per target", () => {
+    const pxFor = (css: string, id: string): number => {
+      const def = CATALOGUE.find((d) => d.id === id);
+      const line = css
+        .split("\n")
+        .find((l) => l.startsWith(`${def?.selectors[0]}{`));
+      const m = line?.match(/blur\((\d+)px\)/);
+      return m ? Number(m[1]) : Number.NaN;
+    };
+    // Media defaults to ×2.5 (20px at global 8); an override of ×1
+    // brings it in line with Messages, and an override on Names
+    // replaces its ×0.6.
+    const css = compileCss(
+      resolveSettings({ multipliers: { media: 1, names: 2 } }),
+    );
+    expect(pxFor(css, "media")).toBe(8);
+    expect(pxFor(css, "names")).toBe(16);
+    // Untouched targets keep their catalogue multipliers.
+    expect(pxFor(css, "chatHeader")).toBe(16);
+    expect(pxFor(css, "messages")).toBe(8);
   });
 
   it("emits zero rules for a disabled target and keeps the others", () => {

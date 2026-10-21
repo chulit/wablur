@@ -49,6 +49,42 @@ describe("popup header and footer (mockup 2026-10-21)", () => {
   });
 });
 
+describe("popup settings gear", () => {
+  it("renders a gear button in the header with an Open settings label", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+
+    const btn = doc.querySelector<HTMLButtonElement>(".popup-header .settings-btn");
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute("aria-label")).toBe("Open settings");
+    expect(btn?.querySelector("svg")).not.toBeNull();
+  });
+
+  it("clicking the gear invokes the open-settings callback", async () => {
+    const doc = freshPopupDocument();
+    let opened = 0;
+    await mountPopup(
+      doc,
+      new SettingsStore(new InMemoryStorageAdapter(undefined)),
+      () => {
+        opened += 1;
+      },
+    );
+    const btn = doc.querySelector<HTMLButtonElement>(".settings-btn");
+    btn!.dispatchEvent(new doc.defaultView!.Event("click"));
+    expect(opened).toBe(1);
+  });
+
+  it("the gear is harmless without a callback (older mount call sites)", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+    const btn = doc.querySelector<HTMLButtonElement>(".settings-btn");
+    expect(() =>
+      btn!.dispatchEvent(new doc.defaultView!.Event("click")),
+    ).not.toThrow();
+  });
+});
+
 describe("popup master switch (Enable Blur card)", () => {
   it("shows the card title and description", async () => {
     const doc = freshPopupDocument();
@@ -122,6 +158,33 @@ describe("popup Mode buttons", () => {
     );
     expect(standard?.classList.contains("active")).toBe(true);
     expect(standard?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("clicking Screen Share matches the Alt+Shift+S (toggleMode) result exactly", async () => {
+    const raw = {
+      ...DEFAULT_SETTINGS,
+      blurPx: 13,
+      revealDelayMs: 500,
+      multipliers: { media: 1.5 },
+      targets: { ...DEFAULT_SETTINGS.targets, avatars: false },
+    };
+    // Path A: the worker's Alt+Shift+S path.
+    const portA = new InMemoryStorageAdapter(structuredClone(raw));
+    await new SettingsStore(portA).toggleMode();
+
+    // Path B: the popup Mode button, from the same starting state.
+    const portB = new InMemoryStorageAdapter(structuredClone(raw));
+    const storeB = new SettingsStore(portB);
+    const doc = freshPopupDocument();
+    await mountPopup(doc, storeB);
+    const screenShare = doc.querySelector<HTMLButtonElement>(
+      '.mode-btn[data-mode="screen-share"]',
+    );
+    screenShare!.dispatchEvent(new doc.defaultView!.Event("click"));
+    await flush();
+
+    expect(await portB.get()).toEqual(await portA.get());
+    expect((await storeB.read()).mode).toBe("screen-share");
   });
 
   it("clicking a Mode button patches the store and moves the active state", async () => {

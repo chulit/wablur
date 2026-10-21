@@ -70,6 +70,28 @@ main {
   gap: 1px;
 }
 
+/* Settings gear — pushed to the header's right end. */
+.settings-btn {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #7a8b96;
+  cursor: pointer;
+}
+
+.settings-btn:hover {
+  background: #f2f7f9;
+  color: #0899ad;
+}
+
 .app-name {
   font-size: 15px;
   font-weight: 700;
@@ -144,7 +166,8 @@ input.toggle:checked::after {
 
 input.toggle:focus-visible,
 input.slider:focus-visible,
-.mode-btn:focus-visible {
+.mode-btn:focus-visible,
+.settings-btn:focus-visible {
   outline: 2px solid #0899ad;
   outline-offset: 2px;
 }

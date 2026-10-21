@@ -4,12 +4,13 @@ import { ChromeStorageAdapter } from "./adapters/chrome-storage.js";
 import { SettingsStore } from "./runtime/settings-store.js";
 
 /**
- * Popup — the extension's only surface, styled after the 2026-10-21
+ * Popup — the extension's quick surface, styled after the 2026-10-21
  * mockup (design/popup-mockup-2026-10-21.png). It renders Settings
  * controls from engine metadata (never hard-coded rows) and writes
  * partial patches through the SettingsStore seam; the open WhatsApp
  * tab reacts via storage.onChanged, with no reload and no message
- * passing.
+ * passing. The header gear opens the options page (options.ts),
+ * where the less-frequent Settings live.
  *
  * One renderer per popup section; mountPopup only orchestrates.
  * Section icons are local inline SVG and the header shows the
@@ -62,6 +63,36 @@ const MODES: readonly { id: Mode; label: string; icon: string }[] = [
     ),
   },
 ];
+
+/** Feather-style gear, drawn through the shared icon helper. */
+const GEAR_ICON = svgIcon(
+  '<circle cx="12" cy="12" r="3"/>' +
+    '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+);
+
+/**
+ * The header's settings gear: opens the options page. The action is
+ * injected (the bootstrap wires chrome.runtime.openOptionsPage) so
+ * the renderer stays free of Chrome globals, like the rest of the
+ * popup.
+ */
+function renderSettingsButton(
+  doc: Document,
+  onOpenSettings?: () => void,
+): void {
+  const header = doc.querySelector(".popup-header");
+  if (!header || header.querySelector(".settings-btn")) return;
+
+  const btn = doc.createElement("button");
+  btn.type = "button";
+  btn.className = "settings-btn";
+  btn.setAttribute("aria-label", "Open settings");
+  btn.innerHTML = GEAR_ICON;
+  btn.addEventListener("click", () => {
+    onOpenSettings?.();
+  });
+  header.append(btn);
+}
 
 function renderMasterSection(
   doc: Document,
@@ -229,8 +260,10 @@ function renderIntensitySection(
 export async function mountPopup(
   doc: Document,
   store: SettingsStore,
+  onOpenSettings?: () => void,
 ): Promise<void> {
   const settings = await store.read();
+  renderSettingsButton(doc, onOpenSettings);
   renderMasterSection(doc, store, settings);
   renderModeSection(doc, store, settings);
   renderTargetsSection(doc, store, settings);
@@ -243,5 +276,7 @@ if (
   document.getElementById("wa-blur-popup")
 ) {
   const store = new SettingsStore(new ChromeStorageAdapter());
-  void mountPopup(document, store);
+  void mountPopup(document, store, () => {
+    chrome.runtime.openOptionsPage();
+  });
 }

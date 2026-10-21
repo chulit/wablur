@@ -8,4 +8,7 @@ extension/manifest.json
 extension/popup.js
 extension/popup.html
 extension/popup.css
+extension/options.js
+extension/options.html
+extension/options.css
 extension/service-worker.js

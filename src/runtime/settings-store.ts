@@ -20,6 +20,8 @@ export interface SettingsPatch {
   enabled?: boolean;
   mode?: Mode;
   blurPx?: number;
+  revealDelayMs?: number;
+  multipliers?: Partial<Record<BlurTargetId, number>>;
   targets?: Partial<Record<BlurTargetId, boolean>>;
 }
 
@@ -30,6 +32,12 @@ export function mergeSettings(current: Settings, patch: SettingsPatch): Settings
     ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
     ...(patch.mode !== undefined ? { mode: patch.mode } : {}),
     ...(patch.blurPx !== undefined ? { blurPx: patch.blurPx } : {}),
+    ...(patch.revealDelayMs !== undefined
+      ? { revealDelayMs: patch.revealDelayMs }
+      : {}),
+    // Multipliers replace as a whole record (callers compose the
+    // complete override set); resolveSettings re-validates it.
+    ...(patch.multipliers !== undefined ? { multipliers: patch.multipliers } : {}),
     targets: { ...current.targets, ...(patch.targets ?? {}) },
   });
 }
@@ -142,6 +150,35 @@ export class SettingsStore {
   async toggleMaster(): Promise<Settings> {
     const current = await this.read();
     return this.patch({ enabled: toggle(current).enabled });
+  }
+
+  /**
+   * The Mode flip path, shared by the worker's `Alt+Shift+S`
+   * handler and the popup's Mode buttons: Standard <-> Screen
+   * Share, preserving every other field exactly.
+   */
+  async toggleMode(): Promise<Settings> {
+    const current = await this.read();
+    return this.patch({
+      mode: current.mode === "standard" ? "screen-share" : "standard",
+    });
+  }
+
+  /**
+   * Restores every field to DEFAULT_SETTINGS (the settings page's
+   * "Reset all settings"). Goes through the one patch path — targets
+   * merge per-key, so all six keys are written explicitly, and
+   * multiplier overrides are cleared.
+   */
+  async resetAll(): Promise<Settings> {
+    return this.patch({
+      enabled: DEFAULT_SETTINGS.enabled,
+      mode: DEFAULT_SETTINGS.mode,
+      blurPx: DEFAULT_SETTINGS.blurPx,
+      revealDelayMs: DEFAULT_SETTINGS.revealDelayMs,
+      multipliers: {},
+      targets: { ...DEFAULT_SETTINGS.targets },
+    });
   }
 
   /**
