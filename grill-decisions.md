@@ -120,6 +120,10 @@ Facts that amend or confirm the design above:
 
 - **Mosaic is ONE hardened chain** (v1.7.3), chosen by the user over both the bare v1.6.0 recipe and the v1.7.2 two-layer merge. His probe had shown every chat-list row carries the filter — the residual escapes were the sampling lottery INSIDE the filter, not selectors. The single chain: per-cell colour averaging (gaussian, cell/2) → alpha firming (slope 3) → full-cell dilate (`wa-blur-wide`, guarantees every sample dot near content catches colour — any content point lies within cell/√2 of a dot) → sampling → dilate into blocks. Block colour = per-cell average; vanishing is impossible by construction. Each spread step is load-bearing and commented as such.
 
+### Amendment #11 — 2026-10-21 (user: "saya lebih suka versi awal" — supersedes #8, #9, #10)
+
+- **Mosaic is the original v1.6.0 recipe again** (v1.7.4, byte-identical restore from `f637538`): raw point sampling → dilate. After live-testing every hardening variant, the user chose the original's crisp look with full knowledge of its trade-off, explained and accepted: the recipe only ever sees the graphic at grid points, so very thin/sparse elements can fall between points and escape — that lottery is intrinsic to point sampling (guaranteeing coverage requires spreading/averaging colour first, which is exactly what changed the look in v1.7.1–v1.7.3). Do not re-engineer Mosaic coverage unless he reopens it.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
