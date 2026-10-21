@@ -21,19 +21,15 @@ export const LIVE_CLASS = "wa-blur-live";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
- * Builds the hidden SVG holding the Mosaic pixelate filter: ONE
- * sampling chain over a `cell` grid (v1.7.3 — the two-layer merge
- * of v1.7.2 was retired by the user's "1 lapis aja" call,
- * 2026-10-21). The source is pre-blurred by cell/2 so each block
- * carries its per-cell average colour, its alpha is firmed back to
- * solid, and the result is spread by a full cell BEFORE the grid
- * samples it, so no element can vanish — guaranteed by
- * construction, see the steps below. Dilating each sample by
- * cell/2 fills its square: DOM content rendered as blocks. The
- * averaging, firming and widening steps are each load-bearing —
- * do not simplify any of them away. Built with createElementNS:
- * innerHTML on SVG elements is unreliable across DOM
- * implementations.
+ * Builds the hidden SVG holding the Mosaic pixelate filter (the
+ * classic flood/composite/tile/morphology recipe): a 1×1 flood
+ * repeated on a `cell` grid samples the source at grid points, and
+ * dilating each sample by cell/2 fills its square — DOM content
+ * rendered as blocks. Built with createElementNS: innerHTML on SVG
+ * elements is unreliable across DOM implementations. This is the
+ * original v1.6.0 recipe, restored verbatim at the user's
+ * preference (2026-10-21); the v1.7.1–v1.7.3 hardening variants
+ * are retired.
  */
 function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   const svg = doc.createElementNS(SVG_NS, "svg") as SVGSVGElement;
@@ -50,8 +46,6 @@ function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   filter.setAttribute("width", "110%");
   filter.setAttribute("height", "110%");
 
-  // Sampling grid: a 1×1 flood on a `cell` pitch, tiled. The one
-  // chain below samples through this grid.
   const flood = doc.createElementNS(SVG_NS, "feFlood");
   flood.setAttribute("x", String(cell / 2));
   flood.setAttribute("y", String(cell / 2));
@@ -65,57 +59,16 @@ function buildPixelateDefs(doc: Document, cell: number): SVGSVGElement {
   const tile = doc.createElementNS(SVG_NS, "feTile");
   tile.setAttribute("result", "wa-blur-tile");
 
-  // Step 1 — averaging (load-bearing): sampling the RAW graphic
-  // at single grid points is what made thin elements vanish in
-  // v1.6.0 (live report 2026-10-21): a block appeared only where a
-  // point landed on painted pixels, and an element whose points
-  // all missed rendered COMPLETELY INVISIBLE instead of mosaiced.
-  // Blurring the source by cell/2 first turns each cell's colour
-  // into its per-cell average.
-  const spread = doc.createElementNS(SVG_NS, "feGaussianBlur");
-  spread.setAttribute("in", "SourceGraphic");
-  spread.setAttribute("stdDeviation", String(cell / 2));
-  spread.setAttribute("result", "wa-blur-soft");
-
-  // Step 2 — solidity (load-bearing): the feFuncA ramp firms the
-  // diluted alpha back up, so the sampled blocks come out solid
-  // instead of washed-out.
-  const firm = doc.createElementNS(SVG_NS, "feComponentTransfer");
-  firm.setAttribute("in", "wa-blur-soft");
-  firm.setAttribute("result", "wa-blur-firm");
-  const firmAlpha = doc.createElementNS(SVG_NS, "feFuncA");
-  firmAlpha.setAttribute("type", "linear");
-  firmAlpha.setAttribute("slope", "3");
-  firmAlpha.setAttribute("intercept", "0");
-  firm.appendChild(firmAlpha);
-
-  // Step 3 — coverage guarantee (load-bearing): dilate the firmed
-  // spread by a FULL cell before sampling. Sample dots tile the
-  // plane every `cell` px, so any point of content lies within
-  // cell/√2 of a dot; a full-cell dilate therefore puts colour on
-  // every dot in or near content. Combined with steps 1–2 this is
-  // what makes vanishing impossible by construction in a single
-  // chain — no second layer needed.
-  const wide = doc.createElementNS(SVG_NS, "feMorphology");
-  wide.setAttribute("in", "wa-blur-firm");
-  wide.setAttribute("operator", "dilate");
-  wide.setAttribute("radius", String(cell));
-  wide.setAttribute("result", "wa-blur-wide");
-
-  // Step 4 — sampling: keep the widened spread only where the
-  // grid dots are.
   const sample = doc.createElementNS(SVG_NS, "feComposite");
-  sample.setAttribute("in", "wa-blur-wide");
+  sample.setAttribute("in", "SourceGraphic");
   sample.setAttribute("in2", "wa-blur-tile");
   sample.setAttribute("operator", "in");
 
-  // Step 5 — dots → blocks: dilating each sample by cell/2 fills
-  // its square. Last primitive in the filter = the output.
-  const blocks = doc.createElementNS(SVG_NS, "feMorphology");
-  blocks.setAttribute("operator", "dilate");
-  blocks.setAttribute("radius", String(cell / 2));
+  const dilate = doc.createElementNS(SVG_NS, "feMorphology");
+  dilate.setAttribute("operator", "dilate");
+  dilate.setAttribute("radius", String(cell / 2));
 
-  filter.append(flood, grid, tile, spread, firm, wide, sample, blocks);
+  filter.append(flood, grid, tile, sample, dilate);
   svg.append(filter);
   return svg;
 }
