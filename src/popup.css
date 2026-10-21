@@ -20,10 +20,21 @@ body {
 }
 
 main {
+  padding: 12px;
+}
+
+/* The two views (main / Settings): exactly one visible at a time.
+   The class-level flex below would otherwise override the hidden
+   attribute's UA display:none, so hidden is restated explicitly. */
+.main-view {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
+}
+
+.main-view[hidden],
+.settings-view[hidden] {
+  display: none;
 }
 
 .card {
@@ -169,7 +180,12 @@ input.slider:focus-visible,
 .mode-btn:focus-visible,
 .blur-style-chip:focus-visible,
 .settings-btn:focus-visible,
-.lock-btn:focus-visible {
+.lock-btn:focus-visible,
+.back-btn:focus-visible,
+.settings-view .btn:focus-visible,
+.settings-view .import-text:focus-visible,
+.settings-view .pin-input:focus-visible,
+.settings-view .auto-lock-select:focus-visible {
   outline: 2px solid #0899ad;
   outline-offset: 2px;
 }
@@ -389,4 +405,237 @@ input.slider::-moz-range-thumb {
 .local-only-desc {
   font-size: 11px;
   color: #7a8b96;
+}
+
+/* Settings view — the popup's second view (v1.7.0; it replaced the
+   separate options page, whose sheet these rules moved from). The
+   view scrolls inside the popup: capped height, own scrollbar.
+   Row labels are narrower than on the old page (92px vs 108px) to
+   fit the 340px popup with a usable slider. */
+.settings-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #7a8b96;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #f2f7f9;
+  color: #0899ad;
+}
+
+.settings-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #12262e;
+}
+
+.settings-view .section-title {
+  margin-bottom: 4px;
+}
+
+.settings-view .section-desc {
+  font-size: 11.5px;
+  color: #7a8b96;
+  margin: 0 0 10px;
+}
+
+/* Slider rows — label, track, value chip. */
+.settings-view .slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.settings-view .slider-row .row-label,
+.settings-view .lock-row .row-label {
+  flex: 0 0 92px;
+}
+
+.settings-view .value-badge {
+  flex: none;
+  min-width: 52px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: #f2f7f9;
+  text-align: center;
+  font-size: 12px;
+  color: #12262e;
+}
+
+/* Hairline dividers between per-target rows. */
+.settings-view .target-intensity-row {
+  border-bottom: 1px solid #e7eef1;
+}
+
+.settings-view .target-intensity-row:last-of-type {
+  border-bottom: none;
+}
+
+/* Buttons — pale chips; the teal treatment marks the hover. */
+.settings-view .btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  background: #f2f7f9;
+  color: #12262e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-view .btn:hover {
+  background: #dff6f8;
+  color: #0899ad;
+}
+
+.settings-view .data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-view .reset-intensities-btn {
+  margin-top: 10px;
+}
+
+/* Import by pasting (a file picker cannot survive in a popup). */
+.settings-view .import-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.settings-view .import-text {
+  width: 100%;
+  min-height: 60px;
+  padding: 7px 10px;
+  border: 1px solid #d8e2e7;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #12262e;
+  font: inherit;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.settings-view .import-btn {
+  align-self: flex-start;
+}
+
+.settings-view .import-error {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: #b3261e;
+}
+
+.settings-view .import-error:empty {
+  display: none;
+}
+
+/* Lock Screen — PIN forms and the auto-lock choice. */
+.settings-view .lock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.settings-view .pin-input,
+.settings-view .auto-lock-select {
+  padding: 7px 10px;
+  border: 1px solid #d8e2e7;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #12262e;
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.settings-view .pin-input {
+  width: 160px;
+  letter-spacing: 3px;
+}
+
+.settings-view .lock-status {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.settings-view .lock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.settings-view .auto-lock-hint {
+  font-size: 11.5px;
+  color: #7a8b96;
+}
+
+.settings-view .lock-error {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: #b3261e;
+}
+
+.settings-view .lock-error:empty {
+  display: none;
+}
+
+/* About — name, version, repo link, the Local-Only sentence. */
+.settings-view .about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-view .about-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-view .about-version,
+.settings-view .about-local-only {
+  font-size: 11.5px;
+  color: #7a8b96;
+}
+
+.settings-view .about-link {
+  font-size: 12px;
+  color: #0899ad;
+  text-decoration: none;
+}
+
+.settings-view .about-link:hover {
+  text-decoration: underline;
 }

@@ -49,7 +49,7 @@ describe("popup header and footer (mockup 2026-10-21)", () => {
   });
 });
 
-describe("popup settings gear", () => {
+describe("popup settings gear and view switching", () => {
   it("renders a gear button in the header with an Open settings label", async () => {
     const doc = freshPopupDocument();
     await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
@@ -60,28 +60,106 @@ describe("popup settings gear", () => {
     expect(btn?.querySelector("svg")).not.toBeNull();
   });
 
-  it("clicking the gear invokes the open-settings callback", async () => {
-    const doc = freshPopupDocument();
-    let opened = 0;
-    await mountPopup(
-      doc,
-      new SettingsStore(new InMemoryStorageAdapter(undefined)),
-      () => {
-        opened += 1;
-      },
-    );
-    const btn = doc.querySelector<HTMLButtonElement>(".settings-btn");
-    btn!.dispatchEvent(new doc.defaultView!.Event("click"));
-    expect(opened).toBe(1);
-  });
-
-  it("the gear is harmless without a callback (older mount call sites)", async () => {
+  it("starts on the main view with the Settings view hidden", async () => {
     const doc = freshPopupDocument();
     await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
-    const btn = doc.querySelector<HTMLButtonElement>(".settings-btn");
-    expect(() =>
-      btn!.dispatchEvent(new doc.defaultView!.Event("click")),
-    ).not.toThrow();
+
+    expect(doc.querySelector<HTMLElement>(".main-view")?.hidden).toBe(false);
+    expect(doc.querySelector<HTMLElement>(".settings-view")?.hidden).toBe(true);
+  });
+
+  it("clicking the gear switches to the Settings view and mounts its sections", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+
+    doc
+      .querySelector<HTMLButtonElement>(".settings-btn")!
+      .dispatchEvent(new doc.defaultView!.Event("click"));
+    await flush();
+
+    expect(doc.querySelector<HTMLElement>(".main-view")?.hidden).toBe(true);
+    expect(doc.querySelector<HTMLElement>(".settings-view")?.hidden).toBe(false);
+    // The Settings view's sections rendered from current state.
+    const view = doc.querySelector(".settings-view")!;
+    expect(view.querySelector(".settings-title")?.textContent).toBe("Settings");
+    expect(view.querySelector(".reveal-delay-value")?.textContent).toBe("300 ms");
+    expect(view.querySelectorAll(".target-intensity-row")).toHaveLength(6);
+  });
+
+  it("the back button returns to the main view", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+
+    doc
+      .querySelector<HTMLButtonElement>(".settings-btn")!
+      .dispatchEvent(new doc.defaultView!.Event("click"));
+    await flush();
+    const back = doc.querySelector<HTMLButtonElement>(".settings-view .back-btn");
+    expect(back?.getAttribute("aria-label")).toBe("Back");
+    back!.dispatchEvent(new doc.defaultView!.Event("click"));
+
+    expect(doc.querySelector<HTMLElement>(".main-view")?.hidden).toBe(false);
+    expect(doc.querySelector<HTMLElement>(".settings-view")?.hidden).toBe(true);
+  });
+
+  it("re-opening the Settings view re-renders from current store state", async () => {
+    const port = new InMemoryStorageAdapter(undefined);
+    const store = new SettingsStore(port);
+    const doc = freshPopupDocument();
+    await mountPopup(doc, store);
+
+    const open = () =>
+      doc
+        .querySelector<HTMLButtonElement>(".settings-btn")!
+        .dispatchEvent(new doc.defaultView!.Event("click"));
+    open();
+    await flush();
+    expect(
+      doc.querySelector(".settings-view .reveal-delay-value")?.textContent,
+    ).toBe("300 ms");
+
+    doc
+      .querySelector<HTMLButtonElement>(".settings-view .back-btn")!
+      .dispatchEvent(new doc.defaultView!.Event("click"));
+    await store.patch({ revealDelayMs: 650 });
+    open();
+    await flush();
+    expect(
+      doc.querySelector(".settings-view .reveal-delay-value")?.textContent,
+    ).toBe("650 ms");
+  });
+
+  it("the Settings view About shows the injected version", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)), {
+      version: "1.7.0",
+    });
+
+    doc
+      .querySelector<HTMLButtonElement>(".settings-btn")!
+      .dispatchEvent(new doc.defaultView!.Event("click"));
+    await flush();
+
+    expect(
+      doc.querySelector(".settings-view .about-version")?.textContent,
+    ).toBe("Version 1.7.0");
+  });
+
+  it("the Settings view renders without optional deps (version dash, no Lock card content)", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+
+    doc
+      .querySelector<HTMLButtonElement>(".settings-btn")!
+      .dispatchEvent(new doc.defaultView!.Event("click"));
+    await flush();
+
+    expect(
+      doc.querySelector(".settings-view .about-version")?.textContent,
+    ).toBe("Version —");
+    expect(
+      doc.querySelector(".settings-view .lock-section")?.textContent,
+    ).toBe("");
   });
 });
 

@@ -25,6 +25,7 @@ const PALETTE = new Set([
   "#d8e2e7", // toggle off
   "#e7eef1", // hairline divider
   "#dce8ec", // slider track remainder
+  "#b3261e", // error red (Settings view form errors; functional, from the retired options sheet)
 ]);
 
 describe("popup design tokens (mockup 2026-10-21)", () => {
@@ -89,5 +90,31 @@ describe("extension icon (user's artwork, installed 2026-10-21)", () => {
         `icons/icon-${size}.png`,
       );
     }
+  });
+});
+
+describe("manifest surface (v1.7.0: Settings live in the popup)", () => {
+  const manifest = JSON.parse(
+    readFileSync(new URL("../src/manifest.json", import.meta.url), "utf8"),
+  ) as {
+    permissions?: string[];
+    commands?: Record<string, unknown>;
+    options_ui?: unknown;
+  };
+
+  it("has no options page", () => {
+    expect(manifest.options_ui).toBeUndefined();
+  });
+
+  it("requests only the storage permission", () => {
+    expect(manifest.permissions).toEqual(["storage"]);
+  });
+
+  it("keeps the three keyboard commands", () => {
+    expect(Object.keys(manifest.commands ?? {}).sort()).toEqual([
+      "lock-now",
+      "toggle-blur",
+      "toggle-mode",
+    ]);
   });
 });

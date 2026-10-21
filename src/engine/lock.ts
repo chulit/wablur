@@ -81,7 +81,7 @@ export function isValidPinFormat(pin: unknown): pin is string {
 export type DigestFn = (data: string) => Promise<string>;
 
 /** SHA-256 hex via WebCrypto — available in every extension
- *  context (content, worker, options, popup) and in Node tests. */
+ *  context (content, worker, popup) and in Node tests. */
 export async function sha256Hex(data: string): Promise<string> {
   const bytes = new TextEncoder().encode(data);
   const digest = await crypto.subtle.digest("SHA-256", bytes);

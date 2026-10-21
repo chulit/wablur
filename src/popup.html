@@ -7,43 +7,60 @@
   </head>
   <body>
     <main id="wa-blur-popup">
-      <header class="popup-header">
-        <span class="app-icon">
-          <img src="icons/icon-128.png" alt="WA Blur" width="42" height="42" />
-        </span>
-        <span class="header-text">
-          <span class="app-name">WA Blur</span>
-          <span class="tagline">Visual Privacy for WhatsApp Web</span>
-        </span>
-      </header>
-      <section class="card master-section"></section>
-      <section class="lock-section"></section>
-      <section class="mode-section">
-        <h2 class="section-title">Blur Mode</h2>
-        <div class="mode-buttons"></div>
-      </section>
-      <section class="blur-style-section">
-        <h2 class="section-title">Blur type</h2>
-        <div class="blur-style-chips"></div>
-      </section>
-      <section class="card targets-card">
-        <h2 class="section-title">What to blur</h2>
-        <div class="targets"></div>
-      </section>
-      <section class="intensity-section"></section>
-      <footer class="local-only-card">
-        <span class="info-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="11" x2="12" y2="16" />
-            <line x1="12" y1="8" x2="12.01" y2="8" />
-          </svg>
-        </span>
-        <span class="local-only-text">
-          <span class="local-only-title">Local-Only</span>
-          <span class="local-only-desc">Settings are stored only in your browser.</span>
-        </span>
-      </footer>
+      <div class="main-view">
+        <header class="popup-header">
+          <span class="app-icon">
+            <img src="icons/icon-128.png" alt="WA Blur" width="42" height="42" />
+          </span>
+          <span class="header-text">
+            <span class="app-name">WA Blur</span>
+            <span class="tagline">Visual Privacy for WhatsApp Web</span>
+          </span>
+        </header>
+        <section class="card master-section"></section>
+        <section class="lock-section"></section>
+        <section class="mode-section">
+          <h2 class="section-title">Blur Mode</h2>
+          <div class="mode-buttons"></div>
+        </section>
+        <section class="blur-style-section">
+          <h2 class="section-title">Blur type</h2>
+          <div class="blur-style-chips"></div>
+        </section>
+        <section class="card targets-card">
+          <h2 class="section-title">What to blur</h2>
+          <div class="targets"></div>
+        </section>
+        <section class="intensity-section"></section>
+        <footer class="local-only-card">
+          <span class="info-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="11" x2="12" y2="16" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </span>
+          <span class="local-only-text">
+            <span class="local-only-title">Local-Only</span>
+            <span class="local-only-desc">Settings are stored only in your browser.</span>
+          </span>
+        </footer>
+      </div>
+      <div class="settings-view" hidden>
+        <div class="settings-header">
+          <button type="button" class="back-btn" aria-label="Back">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <span class="settings-title">Settings</span>
+        </div>
+        <section class="card reveal-section"></section>
+        <section class="card intensity-section"></section>
+        <section class="card data-section"></section>
+        <section class="card lock-section"></section>
+        <section class="card about-section"></section>
+      </div>
     </main>
     <script src="popup.js"></script>
   </body>

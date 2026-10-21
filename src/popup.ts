@@ -11,15 +11,20 @@ import {
 } from "./adapters/chrome-storage.js";
 import { LockStore } from "./runtime/lock-store.js";
 import { SettingsStore } from "./runtime/settings-store.js";
+import {
+  mountSettingsView,
+  type SettingsViewHooks,
+} from "./settings-view.js";
 
 /**
- * Popup — the extension's quick surface, styled after the 2026-10-21
+ * Popup — the extension's only surface, styled after the 2026-10-21
  * mockup (design/popup-mockup-2026-10-21.png). It renders Settings
  * controls from engine metadata (never hard-coded rows) and writes
  * partial patches through the SettingsStore seam; the open WhatsApp
  * tab reacts via storage.onChanged, with no reload and no message
- * passing. The header gear opens the options page (options.ts),
- * where the less-frequent Settings live.
+ * passing. The header gear switches to the popup's second view —
+ * the Settings view (settings-view.ts), where the less-frequent
+ * Settings live; mountPopup owns the view toggle.
  *
  * One renderer per popup section; mountPopup only orchestrates.
  * Section icons are local inline SVG and the header shows the
@@ -80,15 +85,12 @@ const GEAR_ICON = svgIcon(
 );
 
 /**
- * The header's settings gear: opens the options page. The action is
- * injected (the bootstrap wires chrome.runtime.openOptionsPage) so
- * the renderer stays free of Chrome globals, like the rest of the
+ * The header's settings gear: switches the popup to its Settings
+ * view. The action is injected (mountPopup wires the view toggle)
+ * so the renderer stays free of view state, like the rest of the
  * popup.
  */
-function renderSettingsButton(
-  doc: Document,
-  onOpenSettings?: () => void,
-): void {
+function renderSettingsButton(doc: Document, onOpenSettings: () => void): void {
   const header = doc.querySelector(".popup-header");
   if (!header || header.querySelector(".settings-btn")) return;
 
@@ -98,7 +100,7 @@ function renderSettingsButton(
   btn.setAttribute("aria-label", "Open settings");
   btn.innerHTML = GEAR_ICON;
   btn.addEventListener("click", () => {
-    onOpenSettings?.();
+    onOpenSettings();
   });
   header.append(btn);
 }
@@ -108,27 +110,36 @@ const LOCK_ICON = svgIcon(
   '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
 );
 
-/** Injected Lock wiring for the popup's Lock action (bootstrap). */
-export interface PopupLockDeps {
-  lockStore: LockStore;
+/** Injected dependencies for the popup (the bootstrap wires the
+ *  real stores; tests pass only what a case exercises). */
+export interface PopupDeps {
+  /** Lock record seam for the Lock action and the Settings view's
+   *  Lock Screen card; without it neither renders. */
+  lockStore?: LockStore;
   /** Closes the popup after locking; absent in tests. */
   closePopup?: () => void;
+  /** Extension version for the Settings view's About section. */
+  version?: string;
+  /** Confirmation prompt for the Settings view's destructive
+   *  actions (defaults to the window's confirm there). */
+  confirm?: (message: string) => boolean;
 }
 
 /**
  * The Lock action, a card-width button under the master card. Its
  * face follows the Lock record: with a PIN set it reads "Lock now"
  * and engages the gate (the same state write Alt+Shift+L makes);
- * without one it reads "Set up Lock" and opens the Settings page,
- * where the PIN is created. The branch is re-read at click time so
- * the button can never act on a stale face.
+ * without one it reads "Set up Lock" and switches to the Settings
+ * view, where the PIN is created. The branch is re-read at click
+ * time so the button can never act on a stale face.
  */
 function renderLockSection(
   doc: Document,
-  lockDeps: PopupLockDeps,
-  onOpenSettings?: () => void,
+  lockStore: LockStore,
+  onOpenSettings: () => void,
+  closePopup?: () => void,
 ): void {
-  const lockEl = doc.querySelector(".lock-section");
+  const lockEl = doc.querySelector(".main-view .lock-section");
   if (!lockEl) return;
   lockEl.textContent = "";
 
@@ -148,18 +159,18 @@ function renderLockSection(
     label.textContent = hasPin ? "Lock now" : "Set up Lock";
   };
   paint(false);
-  void lockDeps.lockStore.read().then((record) => {
+  void lockStore.read().then((record) => {
     paint(record.pinHash !== null);
   });
 
   btn.addEventListener("click", () => {
     void (async () => {
-      const record = await lockDeps.lockStore.read();
+      const record = await lockStore.read();
       if (record.pinHash !== null) {
-        await lockDeps.lockStore.setLocked(true);
-        lockDeps.closePopup?.();
+        await lockStore.setLocked(true);
+        closePopup?.();
       } else {
-        onOpenSettings?.();
+        onOpenSettings();
       }
     })();
   });
@@ -328,7 +339,9 @@ function renderIntensitySection(
   store: SettingsStore,
   settings: Settings,
 ): void {
-  const intensityEl = doc.querySelector(".intensity-section");
+  // Scoped to the main view: the Settings view has its own
+  // .intensity-section (per-target overrides).
+  const intensityEl = doc.querySelector(".main-view .intensity-section");
   if (!intensityEl) return;
   intensityEl.textContent = "";
 
@@ -374,13 +387,41 @@ function renderIntensitySection(
 export async function mountPopup(
   doc: Document,
   store: SettingsStore,
-  onOpenSettings?: () => void,
-  lockDeps?: PopupLockDeps,
+  deps: PopupDeps = {},
 ): Promise<void> {
   const settings = await store.read();
-  renderSettingsButton(doc, onOpenSettings);
+
+  // The two views: exactly one is visible at a time. Opening the
+  // Settings view re-mounts it, so its sections always render from
+  // current store state — never values cached from a previous open.
+  const mainView = doc.querySelector<HTMLElement>(".main-view");
+  const settingsViewEl = doc.querySelector<HTMLElement>(".settings-view");
+  const openSettings = (): void => {
+    if (!settingsViewEl) return;
+    if (mainView) mainView.hidden = true;
+    settingsViewEl.hidden = false;
+    const hooks: SettingsViewHooks = {};
+    if (deps.version !== undefined) hooks.version = deps.version;
+    if (deps.confirm !== undefined) hooks.confirm = deps.confirm;
+    void mountSettingsView(doc, settingsViewEl, {
+      store,
+      ...(deps.lockStore ? { lockStore: deps.lockStore } : {}),
+      hooks,
+    });
+  };
+  const closeSettings = (): void => {
+    if (settingsViewEl) settingsViewEl.hidden = true;
+    if (mainView) mainView.hidden = false;
+  };
+  settingsViewEl
+    ?.querySelector(".back-btn")
+    ?.addEventListener("click", closeSettings);
+
+  renderSettingsButton(doc, openSettings);
   renderMasterSection(doc, store, settings);
-  if (lockDeps) renderLockSection(doc, lockDeps, onOpenSettings);
+  if (deps.lockStore) {
+    renderLockSection(doc, deps.lockStore, openSettings, deps.closePopup);
+  }
   renderModeSection(doc, store, settings);
   renderBlurStyleSection(doc, store, settings);
   renderTargetsSection(doc, store, settings);
@@ -393,17 +434,14 @@ if (
   document.getElementById("wa-blur-popup")
 ) {
   const store = new SettingsStore(new ChromeStorageAdapter());
-  void mountPopup(
-    document,
-    store,
-    () => {
-      chrome.runtime.openOptionsPage();
+  const deps: PopupDeps = {
+    lockStore: new LockStore(new ChromeLockStorageAdapter()),
+    closePopup: () => {
+      window.close();
     },
-    {
-      lockStore: new LockStore(new ChromeLockStorageAdapter()),
-      closePopup: () => {
-        window.close();
-      },
-    },
-  );
+  };
+  if (typeof chrome !== "undefined" && chrome.runtime?.getManifest) {
+    deps.version = chrome.runtime.getManifest().version;
+  }
+  void mountPopup(document, store, deps);
 }
