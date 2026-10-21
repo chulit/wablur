@@ -1,5 +1,10 @@
 import { TARGET_METADATA, type BlurTargetId } from "./engine/catalogue.js";
-import type { Mode, Settings } from "./engine/blur-engine.js";
+import {
+  BLUR_STYLES,
+  type BlurStyle,
+  type Mode,
+  type Settings,
+} from "./engine/blur-engine.js";
 import {
   ChromeLockStorageAdapter,
   ChromeStorageAdapter,
@@ -238,6 +243,47 @@ function renderModeSection(
   }
 }
 
+/**
+ * The Blur type chips (v1.6.0): one pill per style from the engine's
+ * BLUR_STYLES metadata, the active one tinted like the Mode buttons.
+ * Mirrors the Mode section's write path — patch through the store,
+ * then re-sync every chip from the written Settings.
+ */
+function renderBlurStyleSection(
+  doc: Document,
+  store: SettingsStore,
+  settings: Settings,
+): void {
+  const chipsEl = doc.querySelector(".blur-style-chips");
+  if (!chipsEl) return;
+  chipsEl.textContent = "";
+  const chips = new Map<BlurStyle, HTMLButtonElement>();
+  for (const style of BLUR_STYLES) {
+    const btn = doc.createElement("button");
+    btn.type = "button";
+    btn.className = "blur-style-chip";
+    btn.dataset.blurStyle = style.id;
+    btn.textContent = style.label;
+
+    const sync = (active: BlurStyle) => {
+      btn.classList.toggle("active", active === style.id);
+      btn.setAttribute("aria-pressed", String(active === style.id));
+    };
+    sync(settings.blurStyle);
+    btn.addEventListener("click", () => {
+      void store.patch({ blurStyle: style.id }).then((next) => {
+        for (const b of chips.values()) {
+          const id = b.dataset.blurStyle as BlurStyle;
+          b.classList.toggle("active", id === next.blurStyle);
+          b.setAttribute("aria-pressed", String(id === next.blurStyle));
+        }
+      });
+    });
+    chips.set(style.id, btn);
+    chipsEl.append(btn);
+  }
+}
+
 function renderTargetsSection(
   doc: Document,
   store: SettingsStore,
@@ -336,6 +382,7 @@ export async function mountPopup(
   renderMasterSection(doc, store, settings);
   if (lockDeps) renderLockSection(doc, lockDeps, onOpenSettings);
   renderModeSection(doc, store, settings);
+  renderBlurStyleSection(doc, store, settings);
   renderTargetsSection(doc, store, settings);
   renderIntensitySection(doc, store, settings);
 }

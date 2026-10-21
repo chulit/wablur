@@ -2,6 +2,7 @@ import {
   DEFAULT_SETTINGS,
   resolveSettings,
   toggle,
+  type BlurStyle,
   type Mode,
   type Settings,
 } from "../engine/blur-engine.js";
@@ -22,6 +23,7 @@ export interface SettingsPatch {
   blurPx?: number;
   revealDelayMs?: number;
   multipliers?: Partial<Record<BlurTargetId, number>>;
+  blurStyle?: BlurStyle;
   targets?: Partial<Record<BlurTargetId, boolean>>;
 }
 
@@ -38,6 +40,7 @@ export function mergeSettings(current: Settings, patch: SettingsPatch): Settings
     // Multipliers replace as a whole record (callers compose the
     // complete override set); resolveSettings re-validates it.
     ...(patch.multipliers !== undefined ? { multipliers: patch.multipliers } : {}),
+    ...(patch.blurStyle !== undefined ? { blurStyle: patch.blurStyle } : {}),
     targets: { ...current.targets, ...(patch.targets ?? {}) },
   });
 }
@@ -177,6 +180,7 @@ export class SettingsStore {
       blurPx: DEFAULT_SETTINGS.blurPx,
       revealDelayMs: DEFAULT_SETTINGS.revealDelayMs,
       multipliers: {},
+      blurStyle: DEFAULT_SETTINGS.blurStyle,
       targets: { ...DEFAULT_SETTINGS.targets },
     });
   }

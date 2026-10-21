@@ -312,3 +312,65 @@ describe("popup intensity slider", () => {
     expect(doc.querySelector(".intensity-value")?.textContent).toBe("17 px");
   });
 });
+
+describe("popup Blur type chips (v1.6.0)", () => {
+  it("renders five chips from the style metadata, with Blur active by default", async () => {
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(new InMemoryStorageAdapter(undefined)));
+
+    const chips = [...doc.querySelectorAll<HTMLButtonElement>(".blur-style-chip")];
+    expect(chips.map((c) => c.textContent)).toEqual([
+      "Blur",
+      "Mosaic",
+      "Redact",
+      "Frost",
+      "Fade",
+    ]);
+    const active = chips.filter((c) => c.classList.contains("active"));
+    expect(active).toHaveLength(1);
+    expect(active[0]?.dataset.blurStyle).toBe("blur");
+    expect(active[0]?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("marks the stored style active", async () => {
+    const port = new InMemoryStorageAdapter({
+      ...DEFAULT_SETTINGS,
+      blurStyle: "frost",
+    });
+    const doc = freshPopupDocument();
+    await mountPopup(doc, new SettingsStore(port));
+
+    const chip = doc.querySelector<HTMLButtonElement>(
+      '.blur-style-chip[data-blur-style="frost"]',
+    );
+    expect(chip?.classList.contains("active")).toBe(true);
+    expect(chip?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("clicking a chip patches the store and re-syncs the active chip", async () => {
+    const port = new InMemoryStorageAdapter(undefined);
+    const store = new SettingsStore(port);
+    const doc = freshPopupDocument();
+    await mountPopup(doc, store);
+
+    doc
+      .querySelector<HTMLButtonElement>('.blur-style-chip[data-blur-style="redact"]')
+      ?.click();
+    await flush();
+
+    expect((await store.read()).blurStyle).toBe("redact");
+    const active = [...doc.querySelectorAll(".blur-style-chip.active")];
+    expect(active).toHaveLength(1);
+    expect(active[0]?.getAttribute("aria-pressed") ?? null).not.toBeNull();
+    expect(
+      doc
+        .querySelector('.blur-style-chip[data-blur-style="redact"]')
+        ?.classList.contains("active"),
+    ).toBe(true);
+    expect(
+      doc
+        .querySelector('.blur-style-chip[data-blur-style="blur"]')
+        ?.getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+});

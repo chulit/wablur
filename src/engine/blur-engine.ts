@@ -13,6 +13,43 @@ import {
 /** The two Modes (restored 2026-10-21, following the popup mockup). */
 export type Mode = "standard" | "screen-share";
 
+/**
+ * The Blur Styles (v1.6.0, the maintainer's pick of five): how a
+ * blurred target is rendered illegible. `blur` is the classic
+ * gaussian; `mosaic` pixelates via an SVG filter the runtime plants
+ * in the page (see PIXELATE_FILTER_ID); `redact` covers text with an
+ * opaque bar and blacks images out; `frost` is a heavy frosted-glass
+ * wash; `fade` desaturates with a lighter blur.
+ */
+export type BlurStyle = "blur" | "mosaic" | "redact" | "frost" | "fade";
+
+/** Style metadata for surfaces that render Settings (popup chips). */
+export const BLUR_STYLES: readonly { id: BlurStyle; label: string }[] = [
+  { id: "blur", label: "Blur" },
+  { id: "mosaic", label: "Mosaic" },
+  { id: "redact", label: "Redact" },
+  { id: "frost", label: "Frost" },
+  { id: "fade", label: "Fade" },
+];
+
+/** Id of the SVG pixelate filter the style sink plants for Mosaic. */
+export const PIXELATE_FILTER_ID = "wa-blur-pixelate";
+
+const MOSAIC_MIN_CELL = 3;
+const MOSAIC_MAX_CELL = 18;
+
+/**
+ * Mosaic cell size in px, derived from the global blur intensity:
+ * cell = clamp(round(blurPx × 0.75), 3, 18). Pure, shared by the
+ * runtime (which plants the filter) and its tests.
+ */
+export function mosaicCellSize(blurPx: number): number {
+  return Math.min(
+    MOSAIC_MAX_CELL,
+    Math.max(MOSAIC_MIN_CELL, Math.round(blurPx * 0.75)),
+  );
+}
+
 export interface Settings {
   /** Master Toggle state. */
   enabled: boolean;
@@ -35,6 +72,8 @@ export interface Settings {
    * to 0.5..3 at resolve time.
    */
   multipliers: Partial<Record<BlurTargetId, number>>;
+  /** Active Blur Style — how blurred targets are rendered. */
+  blurStyle: BlurStyle;
   targets: Record<BlurTargetId, boolean>;
 }
 
@@ -59,6 +98,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blurPx: 8,
   revealDelayMs: 300,
   multipliers: {},
+  blurStyle: "blur",
   targets: defaultTargets(),
 };
 
@@ -120,6 +160,18 @@ function resolveMode(raw: Record<string, unknown>): Mode {
 }
 
 /**
+ * Resolves the Blur Style. Anything that is not one of the five
+ * known styles (including Settings persisted before v1.6.0, which
+ * have no key at all) falls back to the classic blur — the fail-safe
+ * direction is the original behaviour, never a surprise style.
+ */
+function resolveBlurStyle(raw: Record<string, unknown>): BlurStyle {
+  return BLUR_STYLES.some((s) => s.id === raw.blurStyle)
+    ? (raw.blurStyle as BlurStyle)
+    : DEFAULT_SETTINGS.blurStyle;
+}
+
+/**
  * The only entry point for persisted data. Always returns a complete,
  * valid Settings: missing/invalid fields fall back per-field to
  * DEFAULT_SETTINGS; unknown keys are dropped. Fail-safe direction is
@@ -146,6 +198,7 @@ export function resolveSettings(raw: unknown): Settings {
       DEFAULT_SETTINGS.revealDelayMs,
     ),
     multipliers: resolveMultipliers(raw),
+    blurStyle: resolveBlurStyle(raw),
     targets,
   };
 }
@@ -216,22 +269,90 @@ function formatDelaySeconds(ms: number): string {
  *
  * A target's effective intensity is the Settings multiplier
  * override when one is set, otherwise its catalogue multiplier.
+ *
+ * The Blur Style decides what "illegible" looks like (see
+ * baseDeclarations); Reveal mechanics are style-independent, except
+ * that Redact Reveals text by restoring colour rather than clearing
+ * a filter.
  */
+/**
+ * The classic blur style's transition — pinned byte-for-byte by the
+ * static stylesheet (ADR-0001): extension/default.css is generated
+ * from DEFAULT_SETTINGS (style `blur`) and must never drift.
+ */
+const CLASSIC_TRANSITION = "transition:filter 0.2s ease;transition-delay:0s;";
+
+/**
+ * The other styles' base transition. Redact animates `color` and
+ * `background-color` rather than `filter` (on text targets), so the
+ * list covers all three properties; the Reveal delay mechanics are
+ * identical (0s on the base rule, the delay on :hover only).
+ */
+const STYLE_TRANSITION =
+  "transition:filter 0.18s ease,color 0.18s ease,background-color 0.18s ease;transition-delay:0s;";
+
+/** Declarations that render one target illegible in the active style. */
+function baseDeclarations(
+  style: BlurStyle,
+  kind: "text" | "image",
+  px: number,
+): string {
+  switch (style) {
+    case "blur":
+      return `filter:blur(${px}px) !important;`;
+    case "frost":
+      return (
+        `filter:blur(${px}px) saturate(0.55) brightness(1.28) ` +
+        `contrast(0.82) !important;`
+      );
+    case "fade":
+      return `filter:blur(${Math.round(px / 2)}px) grayscale(1) !important;`;
+    case "mosaic":
+      // The filter itself is an SVG element the style sink plants in
+      // the page (its cell tracks the global intensity); CSS can only
+      // reference it.
+      return `filter:url("#${PIXELATE_FILTER_ID}") !important;`;
+    case "redact":
+      // No filter can censor text: an opaque bar replaces it (the
+      // glyphs keep their layout, the colour gives nothing away).
+      // Images have no text colour to hide — black them out instead.
+      return kind === "image"
+        ? "filter:brightness(0) !important;"
+        : "color:transparent !important;background-color:#161616 !important;box-shadow:none;";
+  }
+}
+
+/** Declarations that Reveal one target in the active style. */
+function hoverDeclarations(style: BlurStyle, kind: "text" | "image"): string {
+  if (style === "redact" && kind === "text") {
+    // !important is required to beat the base rule's own !important
+    // colour. Caveat: `inherit` restores the inherited colour, which
+    // is the element's own colour unless the page styled the element
+    // itself directly — close enough in WhatsApp's inherited-colour
+    // chat DOM, and the background (the opaque bar) always restores
+    // exactly.
+    return "color:inherit !important;background-color:transparent !important;";
+  }
+  return "filter:none !important;";
+}
+
 export function compileCss(settings: Settings): CssText {
   if (!settings.enabled) return "";
   const rules: string[] = [];
   const revealDelay = formatDelaySeconds(settings.revealDelayMs);
+  const transition =
+    settings.blurStyle === "blur" ? CLASSIC_TRANSITION : STYLE_TRANSITION;
   for (const def of CATALOGUE) {
     if (!settings.targets[def.id]) continue;
     const multiplier = settings.multipliers[def.id] ?? def.multiplier;
     const px = Math.round(settings.blurPx * multiplier);
     for (const selector of def.selectors) {
       rules.push(
-        `${selector}{filter:blur(${px}px) !important;transition:filter 0.2s ease;transition-delay:0s;}`,
+        `${selector}{${baseDeclarations(settings.blurStyle, def.kind, px)}${transition}}`,
       );
       if (settings.mode === "standard") {
         rules.push(
-          `${selector}:hover{filter:none !important;transition-delay:${revealDelay};}`,
+          `${selector}:hover{${hoverDeclarations(settings.blurStyle, def.kind)}transition-delay:${revealDelay};}`,
         );
       }
     }

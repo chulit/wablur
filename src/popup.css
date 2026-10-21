@@ -167,6 +167,7 @@ input.toggle:checked::after {
 input.toggle:focus-visible,
 input.slider:focus-visible,
 .mode-btn:focus-visible,
+.blur-style-chip:focus-visible,
 .settings-btn:focus-visible,
 .lock-btn:focus-visible {
   outline: 2px solid #0899ad;
@@ -233,6 +234,30 @@ input.slider:focus-visible,
 .mode-icon {
   display: inline-flex;
   flex: none;
+}
+
+/* Blur type — a wrapping row of small pills under the Mode card. */
+.blur-style-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.blur-style-chip {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 999px;
+  background: #f2f7f9;
+  color: #5a6d78;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.blur-style-chip.active {
+  background: #dff6f8;
+  color: #0899ad;
 }
 
 /* What to blur — icon, label, toggle; hairline dividers. */

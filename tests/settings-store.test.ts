@@ -88,3 +88,22 @@ describe("SettingsStore driving BlurRuntime (one seam, end to end)", () => {
     stop();
   });
 });
+
+describe("SettingsStore blurStyle (v1.6.0)", () => {
+  it("patch round-trips the Blur Style and preserves other fields", async () => {
+    const port = new InMemoryStorageAdapter(undefined);
+    const store = new SettingsStore(port);
+    const next = await store.patch({ blurStyle: "redact" });
+    expect(next.blurStyle).toBe("redact");
+    expect(next.blurPx).toBe(DEFAULT_SETTINGS.blurPx);
+    expect(await port.get()).toEqual(next);
+    expect((await store.read()).blurStyle).toBe("redact");
+  });
+
+  it("resetAll restores the classic blur style", async () => {
+    const store = new SettingsStore(new InMemoryStorageAdapter(undefined));
+    await store.patch({ blurStyle: "mosaic" });
+    const reset = await store.resetAll();
+    expect(reset.blurStyle).toBe("blur");
+  });
+});

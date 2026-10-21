@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   compileCss,
   DEFAULT_SETTINGS,
+  mosaicCellSize,
   parseSettings,
   resolveSettings,
   serializeSettings,
@@ -324,5 +325,139 @@ describe("compileCss", () => {
         ).toBe(true);
       }
     }
+  });
+});
+
+describe("resolveSettings blurStyle (v1.6.0)", () => {
+  it("defaults to the classic blur, including for legacy objects without the key", () => {
+    expect(resolveSettings(undefined).blurStyle).toBe("blur");
+    expect(resolveSettings({}).blurStyle).toBe("blur");
+    // A v1.5-era persisted Settings object has no blurStyle key.
+    expect(
+      resolveSettings({ enabled: true, mode: "standard", blurPx: 10 })
+        .blurStyle,
+    ).toBe("blur");
+    expect(DEFAULT_SETTINGS.blurStyle).toBe("blur");
+  });
+
+  it("keeps each of the five valid styles", () => {
+    for (const blurStyle of ["blur", "mosaic", "redact", "frost", "fade"]) {
+      expect(resolveSettings({ blurStyle }).blurStyle).toBe(blurStyle);
+    }
+  });
+
+  it("falls back to blur for unknown or non-string values", () => {
+    expect(resolveSettings({ blurStyle: "sparkle" }).blurStyle).toBe("blur");
+    expect(resolveSettings({ blurStyle: 42 }).blurStyle).toBe("blur");
+    expect(resolveSettings({ blurStyle: null }).blurStyle).toBe("blur");
+  });
+
+  it("round-trips through serialize/parse", () => {
+    const s = resolveSettings({ blurStyle: "mosaic" });
+    expect(parseSettings(serializeSettings(s))).toEqual(s);
+  });
+});
+
+describe("compileCss Blur Styles (v1.6.0)", () => {
+  const firstRuleFor = (css: string, id: string): string => {
+    const def = CATALOGUE.find((d) => d.id === id);
+    return (
+      css.split("\n").find((l) => l.startsWith(`${def?.selectors[0]}{`)) ?? ""
+    );
+  };
+  const hoverRuleFor = (css: string, id: string): string => {
+    const def = CATALOGUE.find((d) => d.id === id);
+    return (
+      css
+        .split("\n")
+        .find((l) => l.startsWith(`${def?.selectors[0]}:hover{`)) ?? ""
+    );
+  };
+
+  it("frost: gaussian blur plus a heavy frosted-glass wash", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "frost" }));
+    expect(firstRuleFor(css, "messages")).toContain(
+      "filter:blur(8px) saturate(0.55) brightness(1.28) contrast(0.82) !important;",
+    );
+    // Media keeps its ×2.5: 20px under the wash.
+    expect(firstRuleFor(css, "media")).toContain("blur(20px) saturate(0.55)");
+    expect(hoverRuleFor(css, "messages")).toContain("filter:none !important");
+  });
+
+  it("fade: half the radius, fully desaturated", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "fade" }));
+    // Messages 8px -> 4px; Media 20px -> 10px.
+    expect(firstRuleFor(css, "messages")).toContain(
+      "filter:blur(4px) grayscale(1) !important;",
+    );
+    expect(firstRuleFor(css, "media")).toContain("blur(10px) grayscale(1)");
+    expect(hoverRuleFor(css, "media")).toContain("filter:none !important");
+  });
+
+  it("mosaic: references the planted pixelate filter, for text and image targets alike", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "mosaic" }));
+    expect(firstRuleFor(css, "messages")).toContain(
+      'filter:url("#wa-blur-pixelate") !important;',
+    );
+    expect(firstRuleFor(css, "avatars")).toContain(
+      'filter:url("#wa-blur-pixelate") !important;',
+    );
+    expect(hoverRuleFor(css, "messages")).toContain("filter:none !important");
+  });
+
+  it("redact: text targets get an opaque bar, image targets are blacked out", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "redact" }));
+    const text = firstRuleFor(css, "messages");
+    expect(text).toContain("color:transparent !important;");
+    expect(text).toContain("background-color:#161616 !important;");
+    expect(text).toContain("box-shadow:none;");
+    expect(text).not.toContain("filter:");
+    const image = firstRuleFor(css, "avatars");
+    expect(image).toContain("filter:brightness(0) !important;");
+    // No opaque bar on image targets (the word background-color only
+    // appears inside the shared transition list).
+    expect(image).not.toContain("background-color:#161616");
+    expect(image).not.toContain("color:transparent");
+  });
+
+  it("redact Reveal: text restores colour, images clear the filter", () => {
+    const css = compileCss(resolveSettings({ blurStyle: "redact" }));
+    const textHover = hoverRuleFor(css, "messages");
+    expect(textHover).toContain("color:inherit !important;");
+    expect(textHover).toContain("background-color:transparent !important;");
+    expect(textHover).toContain("transition-delay:0.3s");
+    expect(hoverRuleFor(css, "media")).toContain("filter:none !important");
+  });
+
+  it("redact in Screen Share Mode emits no hover rules", () => {
+    const css = compileCss(
+      resolveSettings({ blurStyle: "redact", mode: "screen-share" }),
+    );
+    expect(css).not.toContain(":hover");
+    expect(css).toContain("background-color:#161616 !important;");
+  });
+
+  it("non-blur styles animate color and background-color as well as filter", () => {
+    for (const blurStyle of ["mosaic", "redact", "frost", "fade"]) {
+      const css = compileCss(resolveSettings({ blurStyle }));
+      expect(firstRuleFor(css, "messages")).toContain(
+        "transition:filter 0.18s ease,color 0.18s ease,background-color 0.18s ease;transition-delay:0s;",
+      );
+    }
+    // The classic style's transition is pinned by the static
+    // stylesheet generation (ADR-0001) and must not drift.
+    expect(firstRuleFor(compileCss(DEFAULT_SETTINGS), "messages")).toContain(
+      "transition:filter 0.2s ease;transition-delay:0s;",
+    );
+  });
+});
+
+describe("mosaicCellSize", () => {
+  it("is clamp(round(blurPx * 0.75), 3, 18)", () => {
+    expect(mosaicCellSize(8)).toBe(6);
+    expect(mosaicCellSize(4)).toBe(3);
+    expect(mosaicCellSize(24)).toBe(18);
+    expect(mosaicCellSize(12)).toBe(9);
+    expect(mosaicCellSize(5)).toBe(4); // round(3.75)
   });
 });

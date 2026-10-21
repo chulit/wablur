@@ -39,6 +39,12 @@ export interface BlurTargetDef {
   readonly defaultEnabled: boolean;
   /** Internal intensity multiplier over the user's global blurPx. */
   readonly multiplier: number;
+  /**
+   * What the target's content is made of. Blur Styles that cannot
+   * use a filter (Redact) treat the two kinds differently: text is
+   * covered by an opaque bar, images are blacked out.
+   */
+  readonly kind: "text" | "image";
 }
 
 export const CATALOGUE: readonly BlurTargetDef[] = [
@@ -63,6 +69,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     ],
     defaultEnabled: true,
     multiplier: 1,
+    kind: "text",
   },
   {
     id: "previews",
@@ -83,6 +90,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     ],
     defaultEnabled: true,
     multiplier: 1,
+    kind: "text",
   },
   {
     id: "names",
@@ -111,6 +119,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     ],
     defaultEnabled: true,
     multiplier: 0.6,
+    kind: "text",
   },
   {
     id: "avatars",
@@ -134,6 +143,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     ],
     defaultEnabled: true,
     multiplier: 0.5,
+    kind: "image",
   },
   {
     id: "media",
@@ -149,6 +159,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     ],
     defaultEnabled: true,
     multiplier: 2.5,
+    kind: "image",
   },
   {
     id: "chatHeader",
@@ -164,6 +175,7 @@ export const CATALOGUE: readonly BlurTargetDef[] = [
     // intensity left it legible (blur applied, just too weak). The
     // header bar gets double so its name is unreadable like the rest.
     multiplier: 2,
+    kind: "text",
   },
 ];
 
