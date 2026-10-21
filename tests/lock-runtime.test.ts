@@ -71,7 +71,10 @@ describe("Lock overlay", () => {
     const host = overlay(doc);
     expect(host).not.toBeNull();
     expect(host!.shadowRoot).not.toBeNull();
-    expect(host!.shadowRoot!.textContent).toContain("WA Blur is locked");
+    expect(host!.shadowRoot!.textContent).toContain("WA Blur");
+    expect(host!.shadowRoot!.textContent).toContain(
+      "Enter password to unlock WhatsApp",
+    );
     expect(overlayInput(doc).type).toBe("password");
     expect(overlayInput(doc).getAttribute("inputmode")).toBe("numeric");
     // The page's own DOM carries nothing of the gate but the host.

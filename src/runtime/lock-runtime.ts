@@ -35,17 +35,60 @@ const ACTIVITY_LISTENER_OPTIONS: AddEventListenerOptions = {
   passive: true,
 };
 
+/* Small lock glyph sitting inside the PIN pill. */
 const LOCK_MARK =
-  '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" ' +
-  'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" ' +
+  'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
   'stroke-linejoin="round" aria-hidden="true">' +
-  '<rect x="3" y="11" width="18" height="11" rx="2"/>' +
-  '<path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+  '<rect x="4" y="11" width="16" height="10" rx="2"/>' +
+  '<path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
-/* The lock screen carries its own visual protection — backdrop blur
-   plus a dark tint — so the page is covered even if the master Blur
-   Toggle is off. Styles live inside the shadow root: nothing from
-   WhatsApp's stylesheets can leak in, and none of this leaks out. */
+const ARROW_MARK =
+  '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" ' +
+  'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
+  'stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>';
+
+/* Inline recreation of the badge mark — a grid of rounded squares
+   in cyan / teal / navy — used only when the real icon cannot be
+   addressed (chrome.runtime unavailable, e.g. in tests). */
+const GRID_MARK =
+  '<svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">' +
+  '<rect x="3" y="3" width="12" height="12" rx="3.5" fill="#2ec5d8"/>' +
+  '<rect x="18" y="3" width="12" height="12" rx="3.5" fill="#0b8ea3"/>' +
+  '<rect x="33" y="3" width="12" height="12" rx="3.5" fill="#10365e"/>' +
+  '<rect x="3" y="18" width="12" height="12" rx="3.5" fill="#0b8ea3"/>' +
+  '<rect x="18" y="18" width="12" height="12" rx="3.5" fill="#2ec5d8" fill-opacity="0.55"/>' +
+  '<rect x="33" y="18" width="12" height="12" rx="3.5" fill="#0e5a74"/>' +
+  '<rect x="3" y="33" width="12" height="12" rx="3.5" fill="#10365e"/>' +
+  '<rect x="18" y="33" width="12" height="12" rx="3.5" fill="#2ec5d8"/>' +
+  '<rect x="33" y="33" width="12" height="12" rx="3.5" fill="#0b8ea3" fill-opacity="0.6"/>' +
+  "</svg>";
+
+/**
+ * URL of the real extension icon for the badge, or null when the
+ * chrome runtime cannot address it (tests, torn-down contexts) —
+ * the badge then falls back to the inline grid mark above. The
+ * manifest exposes icons/icon-128.png as a web-accessible resource
+ * so this page-side overlay may load it.
+ */
+function badgeIconUrl(): string | null {
+  try {
+    if (typeof chrome !== "undefined" && chrome.runtime?.getURL) {
+      return chrome.runtime.getURL("icons/icon-128.png");
+    }
+  } catch {
+    // Fall through to the inline mark.
+  }
+  return null;
+}
+
+/* The lock screen carries its own visual protection — a strengthened
+   backdrop blur under a deep-blue tint (the mood of
+   design/lock-screen-mockup-2026-10-21.png, without a wallpaper
+   asset) — so the page is covered even if the master Blur Toggle is
+   off. Styles live inside the shadow root: nothing from WhatsApp's
+   stylesheets can leak in, and none of this leaks out. */
 const OVERLAY_CSS = `
 :host {
   position: fixed;
@@ -60,21 +103,23 @@ const OVERLAY_CSS = `
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(9, 24, 30, 0.45);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background:
+    radial-gradient(130% 100% at 50% 0%, rgba(31, 116, 184, 0.38),
+      rgba(5, 34, 74, 0.55) 62%),
+    rgba(4, 24, 52, 0.45);
+  backdrop-filter: blur(28px) saturate(1.35);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
 }
-.card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 28px 28px 24px;
-  width: 300px;
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 320px;
   max-width: calc(100vw - 48px);
   text-align: center;
-  color: #12262e;
-  box-shadow: 0 12px 40px rgba(9, 24, 30, 0.35);
+  color: #ffffff;
 }
-.card.shake {
+.gate.shake {
   animation: wa-blur-shake 0.3s ease;
 }
 @keyframes wa-blur-shake {
@@ -82,59 +127,97 @@ const OVERLAY_CSS = `
   25% { transform: translateX(-7px); }
   75% { transform: translateX(7px); }
 }
-.mark {
+.badge {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #ffffff;
   display: flex;
+  align-items: center;
   justify-content: center;
-  color: #0899ad;
-  margin-bottom: 10px;
+  box-shadow: 0 12px 32px rgba(2, 18, 44, 0.4);
+  margin-bottom: 16px;
+}
+.badge img {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  display: block;
 }
 h1 {
-  font-size: 17px;
-  font-weight: 700;
-  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin: 0 0 5px;
 }
 .sub {
-  font-size: 12.5px;
-  color: #7a8b96;
-  margin: 0 0 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 24px;
+}
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 6px 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+.pill:focus-within {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.18);
+}
+.pill.bad {
+  border-color: rgba(255, 120, 110, 0.9);
+}
+.pill .lock {
+  display: flex;
+  flex: none;
+  color: rgba(255, 255, 255, 0.7);
 }
 input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
   font: inherit;
-  font-size: 16px;
-  text-align: center;
-  letter-spacing: 4px;
-  border: 1px solid #d8e2e7;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #12262e;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: #ffffff;
+  caret-color: #ffffff;
+}
+input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: normal;
 }
 input:focus {
-  outline: 2px solid #0899ad;
-  outline-offset: 1px;
-}
-.error {
-  min-height: 16px;
-  margin: 8px 0 4px;
-  font-size: 12px;
-  color: #b3261e;
+  outline: none;
 }
 button {
-  width: 100%;
-  padding: 10px 12px;
+  flex: none;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 10px;
-  background: #0bb5c7;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 button:hover {
-  background: #0899ad;
+  background: rgba(255, 255, 255, 0.34);
+}
+.error {
+  min-height: 16px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #ffa79d;
 }
 `;
 
@@ -160,21 +243,31 @@ export async function startLockRuntime(
     const el = doc.createElement("div");
     el.id = HOST_ID;
     const shadow = el.attachShadow({ mode: "open" });
+    const iconUrl = badgeIconUrl();
+    const badgeInner =
+      iconUrl !== null
+        ? `<img src="${iconUrl}" alt="" width="46" height="46" />`
+        : GRID_MARK;
     shadow.innerHTML =
       `<style>${OVERLAY_CSS}</style>` +
-      '<div class="backdrop"><form class="card" novalidate>' +
-      `<div class="mark">${LOCK_MARK}</div>` +
-      "<h1>WA Blur is locked</h1>" +
-      '<p class="sub">Enter your PIN to keep using WhatsApp Web.</p>' +
+      '<div class="backdrop"><form class="gate" novalidate>' +
+      `<div class="badge">${badgeInner}</div>` +
+      "<h1>WA Blur</h1>" +
+      '<p class="sub">Enter password to unlock WhatsApp</p>' +
+      '<div class="pill">' +
+      `<span class="lock">${LOCK_MARK}</span>` +
       '<input type="password" inputmode="numeric" autocomplete="off" ' +
-      'aria-label="PIN" placeholder="PIN" />' +
+      'aria-label="PIN" placeholder="Enter password" />' +
+      `<button type="submit" aria-label="Unlock">${ARROW_MARK}</button>` +
+      "</div>" +
       '<p class="error" role="alert"></p>' +
-      '<button type="submit">Unlock</button>' +
       "</form></div>";
 
     const form = shadow.querySelector("form")!;
     const input = shadow.querySelector("input")!;
     const error = shadow.querySelector(".error")!;
+    const pill = shadow.querySelector(".pill")!;
+    input.addEventListener("input", () => pill.classList.remove("bad"));
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       void (async () => {
@@ -185,6 +278,7 @@ export async function startLockRuntime(
           await store.setLocked(false);
         } else {
           error.textContent = "Incorrect PIN — try again.";
+          pill.classList.add("bad");
           input.value = "";
           form.classList.remove("shake");
           // Restart the shake animation even on repeated failures.
