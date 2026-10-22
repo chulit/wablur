@@ -155,6 +155,10 @@ Facts that amend or confirm the design above:
 
 - **Lock Screen font fixed** (v1.9.1). His v1.9.0 live render showed every overlay text in Times serif. A computed-style probe proved host, backdrop, title and input ALL computed to "Times": for the host element, the page's stylesheets beat `:host` rules for inherited properties — WhatsApp's global reset forces `font: inherit` on divs, so the host inherited the page root's UA-default serif (non-inherited `:host` properties like position/z-index survived only because the page sets nothing competing). The sans stack now ALSO lives on `.backdrop`, an element inside the shadow tree that page CSS cannot reach; a string-level regression test guards it (JSDOM cannot reproduce the cascade). Standing lesson for any Shadow-DOM UI in this project: never rely on `:host` alone for inherited properties.
 
+### Amendment #19 — 2026-10-22 (user screenshots: "analisa dann rapihin dong")
+
+- **Settings view tidied** (v1.9.2, presentation only — zero behaviour change). His live screenshots showed: (1) the Reveal-delay value badge clipped ("300 m…") because `input.slider` lacked `min-width: 0`, so the flex slider rows overflowed their card — the stack now shrinks properly and every badge sits inside its card; (2) the auto-lock hint ("Applies once a PIN is set.") crushed as a third flex child of the Auto-lock row — it is now a full-width line under the row; (3) "Reset intensities" sat outside the Intensity card — it now lives in a hairline-separated footer inside it. Noted and deliberately unchanged: multiplier sliders below ×1 (×0.5–×0.6) sit at the track's left edge with almost no fill — the maths of the 0.5–3 range, not a bug.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
