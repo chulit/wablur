@@ -209,7 +209,15 @@ export async function mountSettingsView(
         renderIntensitySection();
       });
     });
-    el.append(reset);
+    // The reset lives in a footer row inside the card, separated
+    // from the target rows by the same hairline they use — as a
+    // loose button under the rows it read as outside the card.
+    // A <footer> (not a <div>) keeps the last target row the
+    // :last-of-type div, so its borderless bottom stays intact.
+    const footer = doc.createElement("footer");
+    footer.className = "intensity-footer";
+    footer.append(reset);
+    el.append(footer);
   }
 
   function renderDataSection(): void {
@@ -354,7 +362,11 @@ export async function mountSettingsView(
       renderLockSection();
     };
 
-    const autoLockRow = (): HTMLDivElement => {
+    // The row plus, while no PIN exists, its hint. The hint rides in
+    // the fragment AFTER the row rather than inside it: as a third
+    // flex child it was crushed into a ~50px column (2026-10-22).
+    const autoLockRow = (): DocumentFragment => {
+      const fragment = doc.createDocumentFragment();
       const row = doc.createElement("div");
       row.className = "lock-row auto-lock-row";
       const label = doc.createElement("span");
@@ -381,13 +393,14 @@ export async function mountSettingsView(
           });
       });
       row.append(label, select);
+      fragment.append(row);
       if (lock.record.pinHash === null) {
         const hint = doc.createElement("span");
         hint.className = "auto-lock-hint";
         hint.textContent = "Applies once a PIN is set.";
-        row.append(hint);
+        fragment.append(hint);
       }
-      return row;
+      return fragment;
     };
 
     if (lock.record.pinHash === null) {

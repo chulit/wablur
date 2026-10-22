@@ -173,6 +173,20 @@ describe("settings view per-target intensity", () => {
     ).toBe("×1.5");
   });
 
+  it("Reset intensities sits in a footer row inside the card, under the last target row", async () => {
+    const { view } = freshSettingsView();
+    await mountSettingsView(view.ownerDocument, view, {
+      store: new SettingsStore(new InMemoryStorageAdapter(undefined)),
+    });
+
+    const footer = view.querySelector(".intensity-section .intensity-footer");
+    expect(footer).not.toBeNull();
+    expect(footer!.querySelector(".reset-intensities-btn")).not.toBeNull();
+    // The footer directly follows the last per-target row.
+    const rows = view.querySelectorAll(".target-intensity-row");
+    expect(footer!.previousElementSibling).toBe(rows[rows.length - 1]);
+  });
+
   it("Reset intensities clears overrides and restores catalogue badges", async () => {
     const port = new InMemoryStorageAdapter({
       ...DEFAULT_SETTINGS,
@@ -427,6 +441,18 @@ describe("settings view Lock Screen card — no PIN", () => {
     await expect(lockStore.verifyPin("1234")).resolves.toBe(true);
     expect(view.querySelector(".change-pin-btn")).not.toBeNull();
     expect(view.querySelector(".set-pin-btn")).toBeNull();
+  });
+
+  it("the auto-lock hint renders under the row, not inside it", async () => {
+    const { view } = await mountNoPin();
+    const hint = view.querySelector(".auto-lock-hint");
+    expect(hint).not.toBeNull();
+    expect(hint!.textContent).toBe("Applies once a PIN is set.");
+    // Not a flex child of the .lock-row: as a sibling below the row
+    // it gets the section's full width instead of a crushed column.
+    expect(hint!.closest(".lock-row")).toBeNull();
+    expect(hint!.parentElement).toBe(view.querySelector(".lock-section"));
+    expect(view.querySelector(".auto-lock-row")!.nextElementSibling).toBe(hint);
   });
 
   it("the auto-lock choice persists even before a PIN exists", async () => {
