@@ -83,6 +83,28 @@ describe("Lock overlay", () => {
     expect(overlay(doc)).toBeNull();
   });
 
+  it("declares the sans font stack on .backdrop, not only on :host", async () => {
+    // Regression (live, 2026-10-22): with the stack only on :host,
+    // the Lock Screen rendered in the page's default serif —
+    // WhatsApp's global reset wins the cascade for the host element
+    // and forces font:inherit on it. The stack must also live on
+    // .backdrop, inside the shadow tree where page CSS cannot
+    // reach. JSDOM cannot reproduce that page-vs-:host cascade (no
+    // competing page stylesheet, no real shadow-cascade
+    // precedence), so this asserts on the rendered style text.
+    const { store } = await lockedStore();
+    await store.setLocked(true);
+    const doc = freshDocument();
+    const stop = await startLockRuntime({ store, doc });
+
+    const css = overlay(doc)!.shadowRoot!.querySelector("style")!.textContent!;
+    expect(css).toMatch(/\.backdrop\s*\{[^}]*font-family:[^;]*sans-serif/);
+    expect(css).toContain(
+      'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,',
+    );
+    stop();
+  });
+
   it("stays hidden when not locked, appearing via the change event", async () => {
     const { store } = await lockedStore();
     const doc = freshDocument();

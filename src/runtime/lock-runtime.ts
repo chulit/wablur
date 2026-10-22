@@ -88,7 +88,19 @@ function badgeIconUrl(): string | null {
    design/lock-screen-mockup-2026-10-21.png, without a wallpaper
    asset) — so the page is covered even if the master Blur Toggle is
    off. Styles live inside the shadow root: nothing from WhatsApp's
-   stylesheets can leak in, and none of this leaks out. */
+   stylesheets can leak in, and none of this leaks out.
+
+   One leak the shadow root cannot stop: the cascade for the HOST
+   element itself. For inherited properties, the page's stylesheets
+   beat `:host` rules — WhatsApp's global reset forces font:inherit
+   on divs, so a font stack declared only on `:host` loses and the
+   host inherits the page root's UA-default serif (live-probed
+   2026-10-22: host, backdrop, title and input all computed to
+   "Times"). The font stack is therefore ALSO declared on
+   `.backdrop`, an element inside the shadow tree that page CSS
+   cannot reach; everything in the gate inherits it from there.
+   Non-inherited `:host` properties (position, z-index) are safe
+   where they are — the page sets nothing competing on the host. */
 const OVERLAY_CSS = `
 :host {
   position: fixed;
@@ -103,6 +115,8 @@ const OVERLAY_CSS = `
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
+    "Helvetica Neue", Arial, sans-serif;
   background:
     radial-gradient(130% 100% at 50% 0%, rgba(31, 116, 184, 0.38),
       rgba(5, 34, 74, 0.55) 62%),
