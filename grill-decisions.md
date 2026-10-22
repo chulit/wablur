@@ -151,6 +151,10 @@ Facts that amend or confirm the design above:
 
 - **The Lock Screen wears his mockup's look** (v1.9.0; reference saved as design/lock-screen-mockup-2026-10-21.png). Presentation only — every lock behaviour (PIN verify, shake, triggers, auto-lock, idle tracking) is unchanged. At his explicit choice the background is NOT the mockup's wallpaper image: the page backdrop blur stays, strengthened (28px + saturate) under a deep-navy tint. Layout: white circular badge holding his real extension icon (chrome.runtime.getURL("icons/icon-128.png"), declared in web_accessible_resources; inline-SVG recreation of the grid mark as fallback), title "WA Blur", subtitle "Enter password to unlock WhatsApp", and a glass pill input (lock icon left, circular arrow submit right; Enter also submits; wrong PIN adds a red-tinted pill border alongside the existing shake). Copy follows the mockup (English).
 
+### Amendment #18 — 2026-10-22 (user live test: "font nya jelek", computed-style probe, then "Gas v1.9.1")
+
+- **Lock Screen font fixed** (v1.9.1). His v1.9.0 live render showed every overlay text in Times serif. A computed-style probe proved host, backdrop, title and input ALL computed to "Times": for the host element, the page's stylesheets beat `:host` rules for inherited properties — WhatsApp's global reset forces `font: inherit` on divs, so the host inherited the page root's UA-default serif (non-inherited `:host` properties like position/z-index survived only because the page sets nothing competing). The sans stack now ALSO lives on `.backdrop`, an element inside the shadow tree that page CSS cannot reach; a string-level regression test guards it (JSDOM cannot reproduce the cascade). Standing lesson for any Shadow-DOM UI in this project: never rely on `:host` alone for inherited properties.
+
 ## Open
 
 - Nothing in the grill. The frontier is empty.
